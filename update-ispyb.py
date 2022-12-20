@@ -7,9 +7,6 @@ def clear_usernames_for_proposal(proposal_id):
     query = "DELETE proposal_has_person where person_id={uid}"
     query = "DELETE session_has_person where person_id={uid}"
 
-def calculate_missing_usernames(names1, names2):
-    return names1 - names2
-
 def modify_usernames_for_proposal(proposal_id, previous_usernames, current_usernames):
     # previous_usernames and current_usernames must be sets
     if previous_usernames is not set or current_usernames is not set:
