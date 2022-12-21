@@ -14,12 +14,12 @@ def queryDB(q):
 
 def get_ispyb_proposals():
     # go through all of Session_has_person and get all BLSessions
-    query = "SELECT session_id FROM Session_has_Person"
+    query = "SELECT sessionId FROM Session_has_Person"
     session_ids = queryDB(query)
     session_id_string = ", ".join(session_ids)
     print(session_id_string)
     # get proposals
-    query = "SELECT proposal_id from BLSession where session_id in {session_ids}"
+    query = "SELECT proposalId from BLSession where sessionId in {session_ids}"
     proposal_ids = queryDB(query)
     return proposal_ids
 
