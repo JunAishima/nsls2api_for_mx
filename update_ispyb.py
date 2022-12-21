@@ -48,7 +48,7 @@ def modify_usernames_for_proposal(proposal_id, previous_usernames, current_usern
         core.upsert_session_has_person(params)
 
 def set_usernames_for_proposal(proposal_id):
-
+    ...
 
 def reset_users_for_proposal(proposal_id):
     ''' given a proposal id, take all of the users off an existing set of visits
