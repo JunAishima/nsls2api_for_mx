@@ -12,23 +12,29 @@ def queryDB(q):
   except TypeError:
     return 0
 
+# get list numbers from a queryDB() call
+def get_unique_ids(id_list):
+    id_set = set()
+    for _id in id_list:
+        id_set.add(_id[0])
+    return list(id_set)
+
 def get_ispyb_proposals():
     # go through all of Session_has_person and get all BLSessions
     query = "SELECT sessionId FROM Session_has_Person;"
     session_ids = queryDB(query)
     session_id_string = ""
     if len(session_ids)> 1:
-        for session_id in session_ids:
-            session_str = str(session_id[0])
+        for session_id in get_unique_ids(session_ids):
+            session_str = str(session_id)
             session_id_string += f"'{session_str}', "
         session_id_string = session_id_string[:-2]
     else:
         session_id_string = f"'{str(session_ids[0])}'"
-    print(session_id_string)
     # get proposals
     query = f"SELECT proposalId from BLSession where sessionId in ({session_id_string});"
     proposal_ids = queryDB(query)
-    return proposal_ids
+    return get_unique_ids(proposal_ids)
 
 def clear_usernames_for_proposal(proposal_id):
     persons_on_proposal = core.retrieve_persons_for_proposal("mx", proposal_id)
