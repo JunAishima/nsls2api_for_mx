@@ -8,18 +8,25 @@ cursor = cnx.cursor()
 def queryDB(q):
   cursor.execute(q)
   try:
-    return list(cursor.fetchone()) # TODO fetch all instead
+    return list(cursor.fetchall())
   except TypeError:
     return 0
 
 def get_ispyb_proposals():
     # go through all of Session_has_person and get all BLSessions
-    query = "SELECT sessionId FROM Session_has_Person"
+    query = "SELECT sessionId FROM Session_has_Person;"
     session_ids = queryDB(query)
-    session_id_string = ", ".join(session_ids)
+    session_id_string = ""
+    if len(session_ids)> 1:
+        for session_id in session_ids:
+            session_str = str(session_id[0])
+            session_id_string += f"'{session_str}', "
+        session_id_string = session_id_string[:-2]
+    else:
+        session_id_string = f"'{str(session_ids[0])}'"
     print(session_id_string)
     # get proposals
-    query = "SELECT proposalId from BLSession where sessionId in {session_ids}"
+    query = f"SELECT proposalId from BLSession where sessionId in ({session_id_string});"
     proposal_ids = queryDB(query)
     return proposal_ids
 
