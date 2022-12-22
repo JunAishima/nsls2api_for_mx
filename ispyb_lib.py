@@ -13,13 +13,28 @@ def queryDB(q):
     return 0
 
 # get list numbers from a queryDB() call
+# be able to handle input from a query result or raw list
 def get_unique_ids(id_list):
     id_set = set()
     for _id in id_list:
-        id_set.add(_id[0])
+        if type(_id) == tuple:
+            id_set.add(_id[0])
+        elif type(_id) == int:
+            id_set.add(_id)
     return list(id_set)
 
-def get_ispyb_proposals():
+# works for query results
+def get_in_string(ids):
+    if len(ids)> 1:
+        multi_id_string = ""
+        for _id in get_unique_ids(ids):
+            id_string = str(_id)
+            multi_id_string += f"'{id_string}', "
+        return multi_id_string[:-2]  # get rid of trailing comma
+    else:
+        return f"'{str(ids[0])}'"
+
+def get_ispyb_proposal_ids():
     # go through all of Session_has_person and get all BLSessions
     query = "SELECT sessionId FROM Session_has_Person;"
     session_ids = queryDB(query)
@@ -35,6 +50,11 @@ def get_ispyb_proposals():
     query = f"SELECT proposalId from BLSession where sessionId in ({session_id_string});"
     proposal_ids = queryDB(query)
     return get_unique_ids(proposal_ids)
+
+def get_proposal_numbers(proposal_ids):
+    query = f"SELECT proposalNumber from Proposal where proposalId in ({get_in_string(proposal_ids)});"
+    proposal_nums = queryDB(query)
+    return get_unique_ids(proposal_nums)
 
 def clear_usernames_for_proposal(proposal_id):
     persons_on_proposal = core.retrieve_persons_for_proposal("mx", proposal_id)
