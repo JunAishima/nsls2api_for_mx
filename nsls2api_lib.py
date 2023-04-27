@@ -21,3 +21,11 @@ def get_users_from_proposal(proposal_id):
     return get_from_api(f"proposal/{proposal_id}/users")
 def get_all_proposals(proposal_id):
     return get_from_api(f"proposal/{proposal_id}")
+def get_proposals_for_instrument(cycle="2023-1", instrument="FMX"):
+    proposals_on_instrument = []
+    proposals = get_proposals_from_cycle(cycle)[0]["proposals"]
+    for proposal_num in proposals:
+        proposal = get_all_proposals(proposal_num)
+        if instrument in proposal['instruments']:
+            proposals_on_instrument.append(proposal_num)
+    return proposals_on_instrument
