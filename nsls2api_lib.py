@@ -16,7 +16,7 @@ def get_from_api(url):
 def get_proposals_from_cycle(cycle):
     return get_from_api(f"proposals/{cycle}")
 def get_usernames_from_proposal(proposal_id):
-    return get_from_api(f"proposal/{proposal_id}/usernames")
+    return set(get_from_api(f"proposal/{proposal_id}/usernames")['usernames'])
 def get_users_from_proposal(proposal_id):
     return get_from_api(f"proposal/{proposal_id}/users")
 def get_all_proposals(proposal_id):
