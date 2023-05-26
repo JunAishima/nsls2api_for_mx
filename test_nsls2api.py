@@ -33,10 +33,12 @@ for facility in facilities_api:
 instruments = get_from_api("instruments")
 for instrument in instruments:
     print(f"instrument: {instrument}")
-get_from_api(f"facility/{facility}/cycles/proposals")
-get_from_api(f"facility/{facility}/cycles")
-get_from_api(f"facility/{facility}")
-get_from_api(f"proposal/commissioning")
+get_from_api(f"facility/{facility['id']}/cycles/proposals")
+get_from_api(f"facility/{facility['id']}/cycles")
+get_from_api(f"facility/{facility['id']}")
+proposal = get_from_api(f"proposal/312064")  # FMX commissioning proposal
+proposal_id = proposal['proposal_id']
+cycle="2023-2"
 get_from_api(f"proposals/{cycle}")
 get_from_api(f"proposal/{proposal_id}/usernames")
 get_from_api(f"proposal/{proposal_id}/users")
