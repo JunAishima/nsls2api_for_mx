@@ -12,6 +12,13 @@ def queryDB(q):
   except TypeError:
     return 0
 
+def queryOneFromDB(q):
+  cursor.execute(q)
+  try:
+    return list(cursor.fetchone())[0]
+  except TypeError:
+    return 0
+
 # get list numbers from a queryDB() call
 # be able to handle input from a query result or raw list
 def get_unique_ids(id_list):
@@ -93,4 +100,24 @@ def reset_users_for_proposal(proposal_id):
     current_usernames = nsls2api.get_from_api(f"proposal/{proposal_id}/usernames")
     # finally, set all visits of the proposal to these users
     # alternative, modify the tables as necessary given the previous and current user lists
+    # TODO consider what should happen if old proposals have no users
     modify_user_tables(proposal_id, previous_usernames, current_usernames)
+
+
+def proposalIdFromProposal(propNum):
+  q = ("select proposalId from Proposal where proposalNumber = " + str(propNum))
+  return (queryOneFromDB(q))
+
+
+def maxVisitNumfromProposal(propNum):
+  propID = proposalIdFromProposal(propNum)
+  q = ("select max(visit_number) from BLSession where proposalId = " + str(propID))
+  return (queryOneFromDB(q))
+
+def setup_proposal(proposal, users):
+    # if doesn't exist, make it
+    #   highest visit number is 1
+    # find highest visit number
+    # create newest proposal (highest number)
+    # add users to proposal
+    # add users to session
