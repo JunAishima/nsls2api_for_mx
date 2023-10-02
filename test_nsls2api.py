@@ -38,7 +38,7 @@ get_from_api(f"facility/{facility['id']}/cycles")
 get_from_api(f"facility/{facility['id']}")
 proposal = get_from_api(f"proposal/312064")  # FMX commissioning proposal
 proposal_id = proposal['proposal_id']
-cycle="2023-2"
+cycle="2023-3"
 get_from_api(f"proposals/{cycle}")
 get_from_api(f"proposal/{proposal_id}/usernames")
 get_from_api(f"proposal/{proposal_id}/users")
