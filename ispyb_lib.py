@@ -69,10 +69,12 @@ def clear_usernames_for_proposal(proposal_id, dry_run=True):
         print(f"Clearing usernames for proposal {proposal_id}")
         return
     persons_on_proposal = core.retrieve_persons_for_proposal("mx", proposal_id)
-    query = "SELECT usernames from BLSession where "
-    #probably manual for the following, no stored procedures
-    query = "DELETE proposal_has_person where person_id={uid}"
-    query = "DELETE session_has_person where person_id={uid}"
+    query = f"SELECT proposalId from Proposal where proposalNumber={proposal_id}"
+    query = f"SELECT sessionId FROM BLSession where proposalId={proposal_id}"  # note difference of what we call proposal_id vs BLSession's name, which is proposal_number
+    query = "SELECT personId FROM Session_has_Person WHERE sessionId={session_id}"
+    # delete from Session_has_Person
+    query = "SELECT usernames from BLSession where personId={person_id}"
+    query = "DELETE Session_has_Person where person_id={uid}"
 
 def modify_usernames_for_proposal(proposal_id, previous_usernames, current_usernames, dry_run=True):
     # previous_usernames and current_usernames must be sets
