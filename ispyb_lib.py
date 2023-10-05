@@ -76,8 +76,8 @@ def clear_usernames_for_proposal(proposal_id, dry_run=True):
 
 def modify_usernames_for_proposal(proposal_id, previous_usernames, current_usernames, dry_run=True):
     # previous_usernames and current_usernames must be sets
-    if previous_usernames is not set or current_usernames is not set:
-        raise ValueError("previous and current usernames must be sets")
+    if type(previous_usernames) != set or type(current_usernames) != set:
+        raise ValueError("previous and current usernames must both be sets")
     usernames_to_delete = previous_usernames - current_usernames
     usernames_to_add = current_usernames - previous_usernames
     if dry_run:
@@ -107,10 +107,11 @@ def reset_users_for_proposal(proposal_id, dry_run=True):
     clear_usernames_for_proposal(proposal_id)
     # next, get the users who should be on the current proposal
     current_usernames = nsls2api.get_from_api(f"proposal/{proposal_id}/usernames")
+    previous_usernames = set()
     # finally, set all visits of the proposal to these users
     # alternative, modify the tables as necessary given the previous and current user lists
     # TODO consider what should happen if old proposals have no users
-    modify_usernames_for_proposal(proposal_id, previous_usernames, current_usernames, dry_run=True)
+    modify_usernames_for_proposal(proposal_id, previous_usernames, set(current_usernames['usernames']), dry_run=True)
 
 
 def proposalIdFromProposal(propNum):
