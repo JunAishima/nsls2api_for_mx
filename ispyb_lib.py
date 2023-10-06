@@ -43,6 +43,10 @@ def get_in_string(ids):
         return f"'{str(ids[0])}'"
 
 def get_ispyb_proposal_ids():
+    '''
+    Get all proposals in the ISPyB database by starting from
+    BLSessions
+    '''
     # go through all of Session_has_person and get all BLSessions
     query = "SELECT sessionId FROM Session_has_Person;"
     session_ids = queryDB(query)
@@ -64,7 +68,7 @@ def get_proposal_numbers(proposal_ids):
     proposal_nums = queryDB(query)
     return get_unique_ids(proposal_nums)
 
-def clear_usernames_for_proposal(proposal_id, dry_run=True):
+def remove_all_usernames_for_proposal(proposal_id, dry_run=True):
     if dry_run:
         print(f"Clearing usernames for proposal {proposal_id}")
         return
@@ -76,14 +80,11 @@ def clear_usernames_for_proposal(proposal_id, dry_run=True):
     query = "SELECT usernames from BLSession where personId={person_id}"
     query = "DELETE Session_has_Person where person_id={uid}"
 
-def modify_usernames_for_proposal(proposal_id, previous_usernames, current_usernames, dry_run=True):
-    # previous_usernames and current_usernames must be sets
-    if type(previous_usernames) != set or type(current_usernames) != set:
-        raise ValueError("previous and current usernames must both be sets")
-    usernames_to_delete = previous_usernames - current_usernames
-    usernames_to_add = current_usernames - previous_usernames
+def add_usernames_for_proposal(proposal_id, current_usernames, dry_run=True):
+    if type(current_usernames) != set:
+        raise ValueError("current usernames must be a set")
+    usernames_to_add = current_usernames
     if dry_run:
-        print(f"users to delete: {usernames_to_delete}")
         print(f"users to add: {usernames_to_add}")
         return
     query = "DELETE proposal_has_person where username={username}"
@@ -106,14 +107,13 @@ def reset_users_for_proposal(proposal_id, dry_run=True):
         in ispyb and add the current users in '''
     # first, clear all existing usernames for the proposal_id in ISPyB
     # alternative, get usernames here, then remove/add as necessary at the bottom
-    clear_usernames_for_proposal(proposal_id)
+    remove_all_usernames_for_proposal(proposal_id)
     # next, get the users who should be on the current proposal
     current_usernames = nsls2api.get_from_api(f"proposal/{proposal_id}/usernames")
-    previous_usernames = set()
     # finally, set all visits of the proposal to these users
     # alternative, modify the tables as necessary given the previous and current user lists
     # TODO consider what should happen if old proposals have no users
-    modify_usernames_for_proposal(proposal_id, previous_usernames, set(current_usernames['usernames']), dry_run=True)
+    add_usernames_for_proposal(proposal_id, set(current_usernames['usernames']), dry_run=True)
 
 
 def proposalIdFromProposal(propNum):
