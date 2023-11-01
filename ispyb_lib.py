@@ -74,11 +74,21 @@ def remove_all_usernames_for_proposal(proposal_id, dry_run=True):
         return
     persons_on_proposal = core.retrieve_persons_for_proposal("mx", proposal_id)
     query = f"SELECT proposalId from Proposal where proposalNumber={proposal_id}"
+    proposal_ids = queryDB(query)
     query = f"SELECT sessionId FROM BLSession where proposalId={proposal_id}"  # note difference of what we call proposal_id vs BLSession's name, which is proposal_number
-    query = "SELECT personId FROM Session_has_Person WHERE sessionId={session_id}"
-    # delete from Session_has_Person
-    query = "SELECT usernames from BLSession where personId={person_id}"
-    query = "DELETE Session_has_Person where person_id={uid}"
+    session_ids = queryDB(query)
+    people_in_sessions = set()
+    for session_id in session_ids:
+        query = "SELECT personId FROM Session_has_Person WHERE sessionId={session_id}"
+        people_in_session = queryDB(query)
+        people_in_sessions.add(people_in_session)
+    if dry_run:
+        print(f"Dry run: remove usernames for proposal: {people_in_sessions}")
+    # clear all Session_has_Person for the proposal
+    for session_id in session_ids:
+        query = "DELETE Session_has_Person where session_id={session_id}"
+        delete_session_has_person = queryDB(query)
+        print(delete_session_has_person)
 
 def add_usernames_for_proposal(proposal_id, current_usernames, dry_run=True):
     if type(current_usernames) != set:
