@@ -71,31 +71,38 @@ def get_proposal_numbers(proposal_ids):
 def remove_all_usernames_for_proposal(proposal_id, dry_run=True):
     if dry_run:
         print(f"Clearing usernames for proposal {proposal_id}")
+    try:
+        persons_on_proposal = core.retrieve_persons_for_proposal("mx", proposal_id)
+    except ispyb.NoResult:
+        print("No people found for proposal")
         return
-    persons_on_proposal = core.retrieve_persons_for_proposal("mx", proposal_id)
     query = f"SELECT proposalId from Proposal where proposalNumber={proposal_id}"
-    proposal_ids = queryDB(query)
-    query = f"SELECT sessionId FROM BLSession where proposalId={proposal_id}"  # note difference of what we call proposal_id vs BLSession's name, which is proposal_number
+    proposal_ids = queryDB(query)[0][0]
+    query = f"SELECT sessionId FROM BLSession where proposalId={proposal_ids}"  # note difference of what we call proposal_id vs BLSession's name, which is proposal_number
     session_ids = queryDB(query)
     people_in_sessions = set()
     for session_id in session_ids:
-        query = "SELECT personId FROM Session_has_Person WHERE sessionId={session_id}"
+        query = f"SELECT personId FROM Session_has_Person WHERE sessionId={session_id[0]}"
         people_in_session = queryDB(query)
-        people_in_sessions.add(people_in_session)
+        for person in people_in_session:
+            #print() do something to show the username of this person
+            people_in_sessions.add(person[0])
     if dry_run:
-        print(f"Dry run: remove usernames for proposal: {people_in_sessions}")
+        print(f"Dry run: remove usernames from Session_has_Person: {people_in_sessions}")
     # clear all Session_has_Person for the proposal
-    for session_id in session_ids:
-        query = "DELETE Session_has_Person where session_id={session_id}"
-        delete_session_has_person = queryDB(query)
-        print(delete_session_has_person)
+    if not dry_run:
+        for session_id in session_ids:
+            for person in people_in_sessions:
+                query = f"DELETE Session_has_Person where sessionId={session_id},personId={person.person_id}"
+                delete_session_has_person = queryDB(query)
+                print(delete_session_has_person)
 
 def add_usernames_for_proposal(proposal_id, current_usernames, dry_run=True):
     if type(current_usernames) != set:
         raise ValueError("current usernames must be a set")
     usernames_to_add = current_usernames
     if dry_run:
-        print(f"users to add: {usernames_to_add}")
+        print(f"add_usernames_for_proposal: users to add: {usernames_to_add}")
         return
     query = "DELETE proposal_has_person where username={username}"
     for person in usernames_to_add:
