@@ -69,7 +69,19 @@ def get_proposal_numbers(proposal_ids):
     proposal_nums = queryDB(query)
     return get_unique_ids(proposal_nums)
 
+
+def get_session_ids_for_proposal(proposal_id):
+    query = f"SELECT proposalId from Proposal where proposalNumber={proposal_id}"
+    proposal_ids = queryDB(query)[0][0]
+    query = f"SELECT sessionId FROM BLSession where proposalId={proposal_ids}"  # note difference of what we call proposal_id vs BLSession's name, which is proposal_number
+    session_ids = queryDB(query)
+    return session_ids
+
 def remove_all_usernames_for_proposal(proposal_id, dry_run=True):
+    '''
+    Not within the name is the fact that associations with visits
+    (sessions/BLSessions) are also removed here
+    '''
     if dry_run:
         print(f"Clearing usernames for proposal {proposal_id}")
     try:
@@ -77,10 +89,7 @@ def remove_all_usernames_for_proposal(proposal_id, dry_run=True):
     except ispyb.NoResult:
         print("No people found for proposal")
         return
-    query = f"SELECT proposalId from Proposal where proposalNumber={proposal_id}"
-    proposal_ids = queryDB(query)[0][0]
-    query = f"SELECT sessionId FROM BLSession where proposalId={proposal_ids}"  # note difference of what we call proposal_id vs BLSession's name, which is proposal_number
-    session_ids = queryDB(query)
+    session_ids = get_session_ids_for_proposal(proposal_id)
     people_in_sessions = set()
     for session_id in session_ids:
         query = f"SELECT personId FROM Session_has_Person WHERE sessionId={session_id[0]}"
@@ -104,7 +113,7 @@ def create_person(firstName,lastName,login,dry_run=True):
     if not dry_run:
         person_id = updateDB(query)
     else:
-        person_id = -1
+        person_id = 12345
     return person_id
 
 
