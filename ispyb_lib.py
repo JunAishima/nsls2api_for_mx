@@ -108,7 +108,7 @@ def remove_all_usernames_for_proposal(proposal_id, dry_run=True):
                 print(delete_session_has_person)
 
 
-def create_person(firstName,lastName,login,dry_run=True):
+def create_person(first_name,last_name,login,dry_run=True):
     query = f"INSERT Person (givenName, familyName, login) VALUES('{first_name}', '{last_name}', '{login}')"
     if not dry_run:
         person_id = updateDB(query)
@@ -124,14 +124,14 @@ def create_people(proposal_id, current_usernames):
     of the nslsii API
     '''
     person_ids = set()
-    for person_login in usernames_to_add:
-        query = "SELECT personId from Person where login={person_login}"
+    for person_login in current_usernames:
+        query = f"SELECT personId from Person where login='{person_login}'"
         person_id = queryDB(query)
         first_name = None
         last_name = None
         if not person_id:  # the Person doesn't exist in ISPyB yet
             # extract first and last names from proposal info
-            for user in nsls2api.get_from_api(f"/proposal/{proposal_id}/usernames")['users']
+            for user in nsls2api.get_from_api(f"/proposal/{proposal_id}/usernames")['users']:
                 if user['username'] == person_id:
                     first_name = user['first_name']
                     last_name = user['last_name']
@@ -141,33 +141,26 @@ def create_people(proposal_id, current_usernames):
                 print(f"added new person {person_login} with id: {person_id}")
             else:
                 raise RuntimeError(f"Username {person_id} not found, aborting!")
-        person_ids.add(person_id)
+        person_ids.add(person_id[0])
     return person_ids
 
 
 def add_usernames_for_proposal(proposal_id, current_usernames, dry_run=True):
     if type(current_usernames) != set:
         raise ValueError("current usernames must be a set")
-    usernames_to_add = current_usernames
+    print(f"add_usernames_for_proposal: users to add: {current_usernames}")
     if dry_run:
-        print(f"add_usernames_for_proposal: users to add: {usernames_to_add}")
         return
-    user_ids = create_people(proposal_id, usernames_to_add)
-    for person_login in usernames_to_add:
-        query = f"INSERT Session_has_Person (sessionId, personId, role) VALUES({}, {person_id}, {})"
-        session_has_person_id = queryOne(query)
-        print(f"session add_person: {session_has_person_id}")
+    user_ids = create_people(proposal_id, current_usernames)  # TODO see how to get PI status from nsls2api
+    session_ids = get_session_ids_for_proposal(proposal_id)
+    for person_login in current_usernames:
+        for session_id in session_ids:
+            query = f"INSERT Session_has_Person (sessionId, personId, role) VALUES({session_id}, {person_id}, 'Co-Investigator')"
+            session_has_person_id = queryOne(query)
+            print(f"session add_person: {session_has_person_id}")
 
-def remove_all_usernames_for_session(session_id):
-    ...
 
-def add_usernames_for_session(session_id, current_usernames, dry_run=True):
-    ...
-
-def set_usernames_for_proposal(proposal_id):
-    ...
-
-def reset_users_for_proposal(proposal_id, dry_run=True):
+def reset_users_for_proposal(proposal_id, dry_run=False):
     ''' given a proposal id, take all of the users off an existing set of visits
         in ispyb and add the current users in '''
     # first, clear all existing usernames for the proposal_id in ISPyB
@@ -178,7 +171,7 @@ def reset_users_for_proposal(proposal_id, dry_run=True):
     # finally, set all visits of the proposal to these users
     # alternative, modify the tables as necessary given the previous and current user lists
     # TODO consider what should happen if old proposals have no users
-    add_usernames_for_proposal(proposal_id, set(current_usernames['usernames']), dry_run=True)
+    add_usernames_for_proposal(proposal_id, set(current_usernames['usernames']), dry_run=dry_run)
 
 
 def proposalIdFromProposal(propNum):
