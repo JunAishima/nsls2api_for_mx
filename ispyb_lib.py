@@ -1,6 +1,8 @@
 import nsls2api
 import ispyb.factory
 import nsls2api_lib
+from datetime import datetime
+import time
 
 conn = ispyb.open("/etc/ispyb/ispybConfig.cfg")
 cnx = conn.conn
@@ -60,7 +62,7 @@ def get_ispyb_proposal_ids():
     else:
         session_id_string = f"'{str(session_ids[0])}'"
     # get proposals
-    query = f"SELECT proposalId from BLSession where sessionId in ({session_id_string});"
+    query = f"SELECT proposalId from BLSession where sessionId in {session_id_string};"
     proposal_ids = queryDB(query)
     return get_unique_ids(proposal_ids)
 
@@ -172,6 +174,10 @@ def reset_users_for_proposal(proposal_id, dry_run=False):
     # alternative, get usernames here, then remove/add as necessary at the bottom
     remove_all_usernames_for_proposal(proposal_id)
     # next, get the users who should be on the current proposal
+    add_users_for_proposal(proposal_id, dry_run)
+
+
+def add_users_for_proposal(proposal_id, dry_run=False):
     current_usernames = nsls2api.get_from_api(f"proposal/{proposal_id}/usernames")
     user_info = nsls2api.get_from_api(f"proposal/{proposal_id}")['users']
     # finally, set all visits of the proposal to these users
@@ -198,3 +204,17 @@ def setup_proposal(proposal, users):
     # add users to proposal
     # add users to session
     pass
+
+
+def create_session(proposal_id, session_number, beamline_name):
+    params = core.get_session_for_proposal_code_number_params()
+    params['proposal_code'] = 'mx'
+    params['proposal_number'] = proposal_id
+    params['visit_number'] = session_number
+    params['beamline_name'] = beamline_name
+    params['startdate'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+    params['enddate'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+
+    params['comments'] = 'For software testing'  # TODO get more useful info from nsls2api
+    sid = core.upsert_session_for_proposal_code_number(list(params.values()))
+    cnx.commit()
