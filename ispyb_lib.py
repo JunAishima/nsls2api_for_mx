@@ -72,7 +72,7 @@ def get_proposal_numbers(proposal_ids):
 
 def get_session_ids_for_proposal(proposal_id):
     query = f"SELECT proposalId from Proposal where proposalNumber={proposal_id}"
-    proposal_ids = queryDB(query)[0][0]
+    proposal_ids = queryDB(query)
     query = f"SELECT sessionId FROM BLSession where proposalId={proposal_ids}"  # note difference of what we call proposal_id vs BLSession's name, which is proposal_number
     session_ids = queryDB(query)
     return session_ids
@@ -108,50 +108,55 @@ def remove_all_usernames_for_proposal(proposal_id, dry_run=True):
                 print(delete_session_has_person)
 
 
-def create_person(first_name,last_name,login,dry_run=True):
+def create_person(first_name, last_name, login, is_pi, dry_run=True):
     query = f"INSERT Person (givenName, familyName, login) VALUES('{first_name}', '{last_name}', '{login}')"
     if not dry_run:
-        person_id = updateDB(query)
+        queryDB(query)
+        person_id = queryDB(f"SELECT personId from Person where login='{login}'")[0][0]
     else:
-        person_id = 12345
+        person_id = -1
     return person_id
 
 
-def create_people(proposal_id, current_usernames):
+def create_people(proposal_id, current_usernames, users_info, dry_run=True):
     '''
     Only way to get information about people in the current API is to
     get it from the proposal. This should change in the next version
     of the nslsii API
     '''
     person_ids = set()
-    for person_login in current_usernames:
-        query = f"SELECT personId from Person where login='{person_login}'"
+    for username in current_usernames:
+        query = f"SELECT personId from Person where login='{username}'"
         person_id = queryDB(query)
         first_name = None
         last_name = None
+        is_pi = False
         if not person_id:  # the Person doesn't exist in ISPyB yet
             # extract first and last names from proposal info
-            for user in nsls2api.get_from_api(f"/proposal/{proposal_id}/usernames")['users']:
-                if user['username'] == person_id:
-                    first_name = user['first_name']
-                    last_name = user['last_name']
-                break
+            for user_info in users_info:
+                if username == user_info['username']:
+                    first_name = user_info['first_name']
+                    last_name = user_info['last_name']
+                    is_pi = user_info['is_pi']
+                    break
             if first_name and last_name:
-                person_id = create_person(first_name, last_name, person_login, dry_run)
-                print(f"added new person {person_login} with id: {person_id}")
+                person_id = create_person(first_name, last_name, username, is_pi, dry_run)
+                print(f"added new person {username} with id: {person_id}")
             else:
                 raise RuntimeError(f"Username {person_id} not found, aborting!")
-        person_ids.add(person_id[0])
+        else:
+            person_id = person_id[0][0]
+        person_ids.add(person_id)
     return person_ids
 
 
-def add_usernames_for_proposal(proposal_id, current_usernames, dry_run=True):
+def add_usernames_for_proposal(proposal_id, current_usernames, users_info, dry_run=True):
     if type(current_usernames) != set:
         raise ValueError("current usernames must be a set")
     print(f"add_usernames_for_proposal: users to add: {current_usernames}")
     if dry_run:
         return
-    user_ids = create_people(proposal_id, current_usernames)  # TODO see how to get PI status from nsls2api
+    user_ids = create_people(proposal_id, current_usernames, users_info, dry_run)  # TODO see how to get PI status from nsls2api
     session_ids = get_session_ids_for_proposal(proposal_id)
     for person_login in current_usernames:
         for session_id in session_ids:
@@ -168,10 +173,11 @@ def reset_users_for_proposal(proposal_id, dry_run=False):
     remove_all_usernames_for_proposal(proposal_id)
     # next, get the users who should be on the current proposal
     current_usernames = nsls2api.get_from_api(f"proposal/{proposal_id}/usernames")
+    user_info = nsls2api.get_from_api(f"proposal/{proposal_id}")['users']
     # finally, set all visits of the proposal to these users
     # alternative, modify the tables as necessary given the previous and current user lists
     # TODO consider what should happen if old proposals have no users
-    add_usernames_for_proposal(proposal_id, set(current_usernames['usernames']), dry_run=dry_run)
+    add_usernames_for_proposal(proposal_id, set(current_usernames['usernames']), user_info, dry_run=dry_run)
 
 
 def proposalIdFromProposal(propNum):
