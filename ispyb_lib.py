@@ -163,7 +163,7 @@ def add_usernames_for_proposal(proposal_id, current_usernames, users_info, dry_r
     for person_login in current_usernames:
         for session_id in session_ids:
             query = f"INSERT Session_has_Person (sessionId, personId, role) VALUES({session_id}, {person_id}, 'Co-Investigator')"
-            session_has_person_id = queryOne(query)
+            session_has_person_id = queryOneFromDB(query)
             print(f"session add_person: {session_has_person_id}")
 
 
@@ -205,6 +205,43 @@ def setup_proposal(proposal, users):
     # add users to session
     pass
 
+def is_person(username):
+    query = f"SELECT personId from Person where login='{username}'"
+    return queryDB(query)
+
+
+def get_proposal_info_from_nsls2api(proposal_id):
+    # get info useful for creating proposal
+    # create people in proposal if they haven't already been created
+    value = {}
+    info = nsls2api.get_from_api(f"proposal/{proposal_id}")
+    for user in info["users"]:
+        if not is_person(user["username"]):
+            user_id = create_person(user["first_name"], user["last_name"], user["username"], user["is_pi"])
+        if user["is_pi"]:
+            value["username"] = user["username"]
+    # TODO is pass_type_id for mx/gu/pr? should we use these for proposal_type?
+    value["proposal_type"] = "mx"
+    value["title"] = info["title"]
+    # TODO validate that user_id is available
+    return value
+
+
+def create_proposal(proposal_id):
+    # proposal code/type, PI, title
+    # TODO currently, use first PI. decide how to handle multiple PIs
+    # TODO check whether proposal already exists - skip if info is same, after creating users
+    prop_info = get_proposal_info_from_nsls2api(proposal_id)
+    params = core.get_proposal_params()
+    params['proposal_code'] = 'mx'
+    params['proposal_number'] = int(proposal_id)
+    params['proposal_type'] = "mx"
+    user_id_query = f"SELECT personId from Person where login='{prop_info['username']}'"
+    user_id = queryOneFromDB(user_id_query)
+    params['person_id'] = user_id
+    params['title'] = prop_info["title"].isalpha()
+    proposal_id = core.upsert_proposal(list(params.values()))
+    cnx.commit()
 
 def create_session(proposal_id, session_number, beamline_name):
     params = core.get_session_for_proposal_code_number_params()
