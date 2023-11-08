@@ -3,6 +3,7 @@ import ispyb.factory
 import nsls2api_lib
 from datetime import datetime
 import time
+import mysql.connector
 
 conn = ispyb.open("/etc/ispyb/ispybConfig.cfg")
 cnx = conn.conn
@@ -74,7 +75,7 @@ def get_proposal_numbers(proposal_ids):
 
 def get_session_ids_for_proposal(proposal_id):
     query = f"SELECT proposalId from Proposal where proposalNumber={proposal_id}"
-    proposal_ids = queryDB(query)
+    proposal_ids = queryOneFromDB(query)
     query = f"SELECT sessionId FROM BLSession where proposalId={proposal_ids}"  # note difference of what we call proposal_id vs BLSession's name, which is proposal_number
     session_ids = queryDB(query)
     return session_ids
@@ -114,7 +115,7 @@ def create_person(first_name, last_name, login, is_pi, dry_run=True):
     query = f"INSERT Person (givenName, familyName, login) VALUES('{first_name}', '{last_name}', '{login}')"
     if not dry_run:
         queryDB(query)
-        person_id = queryDB(f"SELECT personId from Person where login='{login}'")[0][0]
+        person_id = queryOneFromDB(f"SELECT personId from Person where login='{login}'")
     else:
         person_id = -1
     return person_id
@@ -162,9 +163,12 @@ def add_usernames_for_proposal(proposal_id, current_usernames, users_info, dry_r
     session_ids = get_session_ids_for_proposal(proposal_id)
     for person_login in current_usernames:
         for session_id in session_ids:
-            query = f"INSERT Session_has_Person (sessionId, personId, role) VALUES({session_id}, {person_id}, 'Co-Investigator')"
-            session_has_person_id = queryOneFromDB(query)
-            print(f"session add_person: {session_has_person_id}")
+            person_id = is_person(person_login)
+            query = f"INSERT Session_has_Person (sessionId, personId, role) VALUES({session_id[0]}, {person_id}, 'Co-Investigator')"
+            try:
+                session_has_person_id = queryOneFromDB(query)
+            except mysql.connector.errors.IntegrityError as e:
+                print(f"Database integrity error, continuing: {e}")
 
 
 def reset_users_for_proposal(proposal_id, dry_run=False):
@@ -207,7 +211,7 @@ def setup_proposal(proposal, users):
 
 def is_person(username):
     query = f"SELECT personId from Person where login='{username}'"
-    return queryDB(query)
+    return queryOneFromDB(query)
 
 
 def get_proposal_info_from_nsls2api(proposal_id):
@@ -217,7 +221,7 @@ def get_proposal_info_from_nsls2api(proposal_id):
     info = nsls2api.get_from_api(f"proposal/{proposal_id}")
     for user in info["users"]:
         if not is_person(user["username"]):
-            user_id = create_person(user["first_name"], user["last_name"], user["username"], user["is_pi"])
+            user_id = create_person(user["first_name"], user["last_name"], user["username"], user["is_pi"], dry_run=False)
         if user["is_pi"]:
             value["username"] = user["username"]
     # TODO is pass_type_id for mx/gu/pr? should we use these for proposal_type?
@@ -246,7 +250,7 @@ def create_proposal(proposal_id):
 def create_session(proposal_id, session_number, beamline_name):
     params = core.get_session_for_proposal_code_number_params()
     params['proposal_code'] = 'mx'
-    params['proposal_number'] = proposal_id
+    params['proposal_number'] = str(proposal_id)
     params['visit_number'] = session_number
     params['beamline_name'] = beamline_name
     params['startdate'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
