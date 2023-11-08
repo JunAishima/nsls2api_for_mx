@@ -42,6 +42,7 @@ def main(args=[]):
     beamline = args.beamline
     ispyb_lib.create_proposal(proposal_name)
     ispyb_lib.create_session(proposal_name, visit_number, beamline)
+    ispyb_lib.add_users_for_proposal(proposal_name)
 
 
 if __name__ == "__main__":
