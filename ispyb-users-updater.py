@@ -1,0 +1,19 @@
+import ispyb_lib
+import nsls2api_lib
+
+# get all ISPyB blsessions # only fairly recent ones, which prevents from getting old proposals where info is scarce/wrong
+ispyb_proposals = ispyb_lib.get_proposal_numbers(ispyb_lib.get_ispyb_proposal_ids())
+# get all proposals and blsessions from ISPyB blsessions
+# for all PASS proposals
+for proposal in sorted(ispyb_proposals):
+    # get all users in PASS proposal
+    print(f"handling proposal: {proposal}")
+    users = nsls2api_lib.get_users_from_proposal(proposal)
+    if not users.get('users'):
+        print('no users, continuing')
+    else:
+        user_list = users['users']
+        usernames = { user['username'] for user in user_list }
+        print(f"user list for proposal from NSLS2 API: {usernames}")
+    ispyb_lib.reset_users_for_proposal(proposal, dry_run=True)
+    print("")
