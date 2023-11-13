@@ -61,9 +61,9 @@ def get_ispyb_proposal_ids():
             session_id_string += f"'{session_str}', "
         session_id_string = session_id_string[:-2]
     else:
-        session_id_string = f"'{str(session_ids[0])}'"
+        session_id_string = f"'{session_ids[0]}'"
     # get proposals
-    query = f"SELECT proposalId from BLSession where sessionId in {session_id_string};"
+    query = f"SELECT proposalId from BLSession where sessionId in ({session_id_string});"
     proposal_ids = queryDB(query)
     return get_unique_ids(proposal_ids)
 
@@ -186,11 +186,12 @@ def reset_users_for_proposal(proposal_id, dry_run=False):
 
 def add_users_for_proposal(proposal_id, dry_run=False):
     current_usernames = nsls2api.get_from_api(f"proposal/{proposal_id}/usernames")
-    user_info = nsls2api.get_from_api(f"proposal/{proposal_id}")['users']
-    # finally, set all visits of the proposal to these users
-    # alternative, modify the tables as necessary given the previous and current user lists
-    # TODO consider what should happen if old proposals have no users
-    add_usernames_for_proposal(proposal_id, set(current_usernames['usernames']), user_info, dry_run=dry_run)
+    try:
+        user_info = nsls2api.get_from_api(f"proposal/{proposal_id}")['users']
+        # TODO consider what should happen if old proposals have no users
+        add_usernames_for_proposal(proposal_id, set(current_usernames['usernames']), user_info, dry_run=dry_run)
+    except KeyError as e:
+        print(f"Problem {e} with getting user info from proposal {proposal_id}. there may be no users associated with the proposal. continuing")
 
 
 def proposalIdFromProposal(propNum):
