@@ -17,5 +17,5 @@ for proposal in sorted(ispyb_proposals):
         user_list = users['users']
         usernames = { user['username'] for user in user_list }
         print(f"user list for proposal from NSLS2 API: {usernames}")
-    ispyb_lib.reset_users_for_proposal(proposal, dry_run=True)
+    ispyb_lib.reset_users_for_proposal(proposal, dry_run=False)
     print("")

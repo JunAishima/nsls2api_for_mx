@@ -183,7 +183,7 @@ def reset_users_for_proposal(proposal_id, dry_run=False):
         in ispyb and add the current users in '''
     # first, clear all existing usernames for the proposal_id in ISPyB
     # alternative, get usernames here, then remove/add as necessary at the bottom
-    remove_all_usernames_for_proposal(proposal_id)
+    remove_all_usernames_for_proposal(proposal_id, dry_run)
     # next, get the users who should be on the current proposal
     add_users_for_proposal(proposal_id, dry_run)
 
