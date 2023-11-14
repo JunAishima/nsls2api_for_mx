@@ -2,9 +2,11 @@ import ispyb_lib
 import nsls2api_lib
 
 # get all ISPyB blsessions # only fairly recent ones, which prevents from getting old proposals where info is scarce/wrong
+print(f"proposals currently in ispyb: {ispyb_lib.get_ispyb_proposal_ids()}")
 ispyb_proposals = ispyb_lib.get_proposal_numbers(ispyb_lib.get_ispyb_proposal_ids())
 # get all proposals and blsessions from ISPyB blsessions
 # for all PASS proposals
+print(f"proposals to update: {ispyb_proposals}")
 for proposal in sorted(ispyb_proposals):
     # get all users in PASS proposal
     print(f"handling proposal: {proposal}")
