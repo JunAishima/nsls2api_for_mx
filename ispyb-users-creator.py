@@ -22,6 +22,11 @@ def main(args=[]):
         help="Name of the visit."
     )
     parser.add_argument(
+        "--beamline",
+        type=str,
+        help="Beamline name."
+    )
+    parser.add_argument(
         "--verbose",
         "-v",
         action="count",
@@ -39,15 +44,16 @@ def main(args=[]):
 
     proposal = args.proposal
     visit = args.visit
+    beamline = args.beamline
 
-    if not proposal or not visit:
-        raise RuntimeError("please define proposal and visit")
+    if not proposal or not visit or not beamline:
+        raise RuntimeError("please define proposal, visit, AND beamline")
 
     # get people
     # create people, if necessary
     # create proposal
     # create visit
-    ispyb_lib.add_users_for_proposal(proposal)
+    ispyb_lib.add_users_for_proposal(proposal, visit, beamline)
 
 if __name__ == "__main__":
     main()

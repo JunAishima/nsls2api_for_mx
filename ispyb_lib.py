@@ -154,15 +154,18 @@ def create_people(proposal_id, current_usernames, users_info, dry_run=True):
     return person_ids
 
 
-def add_usernames_for_proposal(proposal_id, current_usernames, users_info, dry_run=True):
+def add_usernames_for_proposal(proposal_code, current_usernames, users_info, beamline, dry_run=True):
     if type(current_usernames) != set:
         raise ValueError("current usernames must be a set")
     print(f"add_usernames_for_proposal: users to add ({len(current_usernames)}): {current_usernames}")
     if dry_run:
         print('dry run, stopping')
         return
-    user_ids = create_people(proposal_id, current_usernames, users_info, dry_run)  # TODO see how to get PI status from nsls2api
-    session_ids = get_session_ids_for_proposal(proposal_id)
+    user_ids = create_people(proposal_code, current_usernames, users_info, dry_run)  # TODO see how to get PI status from nsls2api
+    proposal_id = create_proposal(proposal_code)
+    session_ids = get_session_ids_for_proposal(proposal_code)
+    if len(session_ids) == 0:
+        session_id = [create_session(proposal_code, 1, beamline)]
     for person_login in current_usernames:
         for session_id in session_ids:
             person_id = is_person(person_login)
@@ -185,12 +188,12 @@ def reset_users_for_proposal(proposal_id, dry_run=False):
     add_users_for_proposal(proposal_id, dry_run)
 
 
-def add_users_for_proposal(proposal_id, dry_run=False):
+def add_users_for_proposal(proposal_id, session_number, beamline, dry_run=False):
     current_usernames = nsls2api.get_from_api(f"proposal/{proposal_id}/usernames")
     try:
         user_info = nsls2api.get_from_api(f"proposal/{proposal_id}")['users']
         # TODO consider what should happen if old proposals have no users
-        add_usernames_for_proposal(proposal_id, set(current_usernames['usernames']), user_info, dry_run=dry_run)
+        add_usernames_for_proposal(proposal_id, set(current_usernames['usernames']), user_info, beamline, dry_run=dry_run)
     except KeyError as e:
         print(f"Problem {e} with getting user info from proposal {proposal_id}. there may be no users associated with the proposal. continuing")
 
@@ -251,6 +254,7 @@ def create_proposal(proposal_id):
     params['title'] = prop_info["title"].isalpha()
     proposal_id = core.upsert_proposal(list(params.values()))
     cnx.commit()
+    return proposal_id
 
 def create_session(proposal_id, session_number, beamline_name):
     params = core.get_session_for_proposal_code_number_params()
@@ -264,3 +268,4 @@ def create_session(proposal_id, session_number, beamline_name):
     params['comments'] = 'For software testing'  # TODO get more useful info from nsls2api
     sid = core.upsert_session_for_proposal_code_number(list(params.values()))
     cnx.commit()
+    return sid
