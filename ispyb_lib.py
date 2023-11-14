@@ -108,8 +108,11 @@ def remove_all_usernames_for_proposal(proposal_id, dry_run=True):
     if not dry_run:
         for session_id in session_ids:
             for person in people_in_sessions:
-                query = f"DELETE Session_has_Person where sessionId={session_id},personId={person.person_id}"
-                delete_session_has_person = queryDB(query)
+                query = f"DELETE FROM Session_has_Person where sessionId={session_id[0]} AND personId={person}"
+                try:
+                    delete_session_has_person = queryDB(query)
+                except mysql.connector.errors.ProgrammingError as e:
+                    print(f"Problem with proposal {proposal_id}, session {session_id}, person {person}")
 
 
 def create_person(first_name, last_name, login, is_pi, dry_run=True):
