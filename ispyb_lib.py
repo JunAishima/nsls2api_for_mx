@@ -87,11 +87,6 @@ def remove_all_usernames_for_proposal(proposal_id, dry_run=True):
     '''
     if dry_run:
         print(f"Clearing usernames for proposal {proposal_id}")
-    try:
-        persons_on_proposal = core.retrieve_persons_for_proposal("mx", proposal_id)
-    except ispyb.NoResult:
-        print("No people found for proposal")
-        return
     session_ids = get_session_ids_for_proposal(proposal_id)
     people_in_sessions = set()
     for session_id in session_ids:
@@ -101,14 +96,20 @@ def remove_all_usernames_for_proposal(proposal_id, dry_run=True):
             #print() do something to show the username of this person
             people_in_sessions.add(person[0])
     if dry_run:
-        print(f"Dry run: remove usernames from Session_has_Person: {people_in_sessions}")
+        print(f"Dry run: remove usernames from Session_has_Person:",)
+        people_name = set()
+        for person in people_in_session:
+            query = f"SELECT login from Person where personId={person[0]}"
+            name = queryOneFromDB(query)
+            people_name.add(name)
+        print(f"{people_name}", )
+    print("")
     # clear all Session_has_Person for the proposal
     if not dry_run:
         for session_id in session_ids:
             for person in people_in_sessions:
                 query = f"DELETE Session_has_Person where sessionId={session_id},personId={person.person_id}"
                 delete_session_has_person = queryDB(query)
-                print(delete_session_has_person)
 
 
 def create_person(first_name, last_name, login, is_pi, dry_run=True):
