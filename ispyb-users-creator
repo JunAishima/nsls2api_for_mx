@@ -5,28 +5,16 @@ import nsls2api_lib
 import argparse
 import sys
 
-#input
-# proposal
-# visit number
+ispyb_beamlines = ("amx", "fmx", "nyx")
 
 def main(args=[]):
     parser = argparse.ArgumentParser(
-        description="Create people, visit, and proposal information in ISPyB. Check whether these already exist."
+        description="Create or update people, visit, and proposal information in ISPyB. Currently restricted to one visit per proposal, and these visits are assigned to 'amx' due to the lack of visit information in NSLS2API."
     )
     parser.add_argument(
-        "--proposal",
-        type=int,
-        help="The names of the proposal.",
-    )
-    parser.add_argument(
-        "--visit",
-        type=str,
-        help="Name of the visit."
-    )
-    parser.add_argument(
-        "--beamline",
-        type=str,
-        help="Beamline name."
+            "--cycle",
+            action="",
+            help="Cycle to create/update people, visits, and proposals for"
     )
     parser.add_argument(
         "--verbose",
@@ -44,18 +32,17 @@ def main(args=[]):
         else:
             logging.basicConfig()  # "WARNING" by default
 
-    proposal = args.proposal
-    visit = args.visit
-    beamline = args.beamline
+    cycle = args.cycle
 
-    if not proposal or not visit or not beamline:
-        raise RuntimeError("please define proposal, visit, AND beamline")
+    if not cycle:
+        raise RuntimeError("Please define cycle")
 
-    # get people
-    # create people, if necessary
-    # create proposal
-    # create visit
-    ispyb_lib.add_users_for_proposal(proposal, visit, beamline)
+    cycle_proposals = nsls2api_lib.get_proposals_from_cycle(cycle)
+    for proposal in cycle_proposals:
+        proposal_info = get_proposal_info(proposal_id)
+        print(proposal_info)
+        if ispyb_beamlines in proposal_info["beamlines"]:
+            ispyb_lib.add_users_for_proposal(proposal)
 
 if __name__ == "__main__":
     main()
