@@ -125,6 +125,10 @@ def create_person(first_name, last_name, login, is_pi, dry_run=True):
     return person_id
 
 
+def sanitize_name(name):
+    intermediate = [ ch for ch in name if ch.isalpha() ]
+    return "".join(intermediate)
+
 def create_people(proposal_id, current_usernames, users_info, dry_run=True):
     '''
     Only way to get information about people in the current API is to
@@ -147,11 +151,17 @@ def create_people(proposal_id, current_usernames, users_info, dry_run=True):
                     is_pi = user_info['is_pi']
                     break
             if first_name and last_name:
-                person_id = create_person(first_name, last_name, username, is_pi, dry_run)
-                print(f"added new person {username} with id: {person_id}")
+                try:
+                    person_id = create_person(sanitize_name(first_name), sanitize_name(last_name), username, is_pi, dry_run)
+                    print(f"added new person {username} with id: {person_id}")
+                except mysql.connector.errors.ProgrammingError as e:
+                    print(f"Error while trying to create new person {username} first name: {first_name} last name: {last_name} is_pi: {is_pi} with id: {person_id} {e}")
+                    continue
+                    # print 
             else:
                 raise RuntimeError(f"Username {person_id} not found, aborting!")
         else:
+            print("using existing person")
             person_id = person_id[0][0]
         person_ids.add(person_id)
     return person_ids

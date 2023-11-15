@@ -47,6 +47,7 @@ def main(args=[]):
     for proposal in cycle_proposals[0]["proposals"]:
         proposal_info = nsls2api_lib.get_proposal_info(proposal)
         if is_ispyb_beamlines_in_list(proposal_info["instruments"]):
+            print(f"Adding users for proposal {proposal}")
             ispyb_lib.add_users_for_proposal(proposal)
 
 if __name__ == "__main__":
