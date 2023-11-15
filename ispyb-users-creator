@@ -7,13 +7,19 @@ import sys
 
 ispyb_beamlines = ("amx", "fmx", "nyx")
 
+def is_ispyb_beamlines_in_list(instrument_list):
+    for instrument in instrument_list:
+        if instrument.lower() in ispyb_beamlines:
+            return True
+    return False
+
 def main(args=[]):
     parser = argparse.ArgumentParser(
         description="Create or update people, visit, and proposal information in ISPyB. Currently restricted to one visit per proposal, and these visits are assigned to 'amx' due to the lack of visit information in NSLS2API."
     )
     parser.add_argument(
             "--cycle",
-            action="",
+            type=str,
             help="Cycle to create/update people, visits, and proposals for"
     )
     parser.add_argument(
@@ -38,10 +44,9 @@ def main(args=[]):
         raise RuntimeError("Please define cycle")
 
     cycle_proposals = nsls2api_lib.get_proposals_from_cycle(cycle)
-    for proposal in cycle_proposals:
-        proposal_info = get_proposal_info(proposal_id)
-        print(proposal_info)
-        if ispyb_beamlines in proposal_info["beamlines"]:
+    for proposal in cycle_proposals[0]["proposals"]:
+        proposal_info = nsls2api_lib.get_proposal_info(proposal)
+        if is_ispyb_beamlines_in_list(proposal_info["instruments"]):
             ispyb_lib.add_users_for_proposal(proposal)
 
 if __name__ == "__main__":
