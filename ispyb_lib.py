@@ -191,7 +191,7 @@ def reset_users_for_proposal(proposal_id, dry_run=False):
     add_users_for_proposal(proposal_id, dry_run)
 
 
-def add_users_for_proposal(proposal_id, session_number, beamline, dry_run=False):
+def add_users_for_proposal(proposal_id, session_number=1, beamline="amx", dry_run=False):
     current_usernames = nsls2api.get_from_api(f"proposal/{proposal_id}/usernames")
     try:
         user_info = nsls2api.get_from_api(f"proposal/{proposal_id}")['users']
