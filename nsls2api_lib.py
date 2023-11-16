@@ -14,7 +14,6 @@ def is_ispyb_instrument(instruments):
 def get_from_api(url):
     if url:
         response = httpx.get(f"{base_url}/{url}")
-        time.sleep(0.5)
         if response.status_code == httpx.codes.OK:
             return response.json()
         raise RuntimeError(f"failed to get value from {url}. response code: {response.status_code}")
