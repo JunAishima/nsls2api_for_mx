@@ -5,6 +5,12 @@ base_url = "https://api-staging.nsls2.bnl.gov"
 
 ispyb_instruments = ("AMX", "FMX", "NYX")
 
+def is_ispyb_instrument(instruments):
+    for instrument in instruments:
+        if instrument in ispyb_instruments:
+            return True
+    return False
+
 def get_from_api(url):
     if url:
         response = httpx.get(f"{base_url}/{url}")
