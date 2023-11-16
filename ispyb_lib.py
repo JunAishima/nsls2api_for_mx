@@ -4,6 +4,8 @@ import nsls2api_lib
 from datetime import datetime
 import time
 import mysql.connector
+import logging
+logger = logging.getLogger(__name__)
 
 conn = ispyb.open("/etc/ispyb/ispybConfig.cfg")
 cnx = conn.conn
@@ -86,24 +88,23 @@ def remove_all_usernames_for_proposal(proposal_id, dry_run=True):
     (sessions/BLSessions) are also removed here
     '''
     if dry_run:
-        print(f"Clearing usernames for proposal {proposal_id}")
+        logger.info(f"Clearing usernames for proposal {proposal_id}")
     session_ids = get_session_ids_for_proposal(proposal_id)
     people_in_sessions = set()
     for session_id in session_ids:
         query = f"SELECT personId FROM Session_has_Person WHERE sessionId={session_id[0]}"
         people_in_session = queryDB(query)
         for person in people_in_session:
-            #print() do something to show the username of this person
+            # TODO something to show the username of this person?
             people_in_sessions.add(person[0])
     if dry_run:
-        print(f"Dry run: remove usernames from Session_has_Person:",)
+        logger.info(f"Dry run: remove usernames from Session_has_Person:",)
         people_name = set()
         for person in people_in_session:
             query = f"SELECT login from Person where personId={person[0]}"
             name = queryOneFromDB(query)
             people_name.add(name)
-        print(f"{people_name}", )
-    print("")
+        logger.info(f"{people_name}", )
     # clear all Session_has_Person for the proposal
     if not dry_run:
         for session_id in session_ids:
@@ -112,7 +113,7 @@ def remove_all_usernames_for_proposal(proposal_id, dry_run=True):
                 try:
                     delete_session_has_person = queryDB(query)
                 except mysql.connector.errors.ProgrammingError as e:
-                    print(f"Problem with proposal {proposal_id}, session {session_id}, person {person}")
+                    logger.exception(f"Problem with proposal {proposal_id}, session {session_id}, person {person}")
 
 
 def create_person(first_name, last_name, login, is_pi, dry_run=True):
@@ -153,15 +154,14 @@ def create_people(proposal_id, current_usernames, users_info, dry_run=True):
             if first_name and last_name:
                 try:
                     person_id = create_person(sanitize_name(first_name), sanitize_name(last_name), username, is_pi, dry_run)
-                    print(f"added new person {username} with id: {person_id}")
+                    logger.info(f"added new person {username} with id: {person_id}")
                 except mysql.connector.errors.ProgrammingError as e:
-                    print(f"Error while trying to create new person {username} first name: {first_name} last name: {last_name} is_pi: {is_pi} with id: {person_id} {e}")
+                    logger.exception(f"Error while trying to create new person {username} first name: {first_name} last name: {last_name} is_pi: {is_pi} with id: {person_id} {e}")
                     continue
-                    # print 
             else:
                 raise RuntimeError(f"Username {person_id} not found, aborting!")
         else:
-            print("using existing person")
+            logger.debug("using existing person")
             person_id = person_id[0][0]
         person_ids.add(person_id)
     return person_ids
@@ -170,9 +170,9 @@ def create_people(proposal_id, current_usernames, users_info, dry_run=True):
 def add_usernames_for_proposal(proposal_code, current_usernames, users_info, beamline, dry_run=True):
     if type(current_usernames) != set:
         raise ValueError("current usernames must be a set")
-    print(f"add_usernames_for_proposal: users to add ({len(current_usernames)}): {current_usernames}")
+    logger.info(f"add_usernames_for_proposal: users to add ({len(current_usernames)}): {current_usernames}")
     if dry_run:
-        print('dry run, stopping')
+        logger.info('dry run, stopping')
         return
     user_ids = create_people(proposal_code, current_usernames, users_info, dry_run)  # TODO see how to get PI status from nsls2api
     proposal_id = create_proposal(proposal_code)
@@ -208,7 +208,7 @@ def add_users_for_proposal(proposal_id, session_number=1, beamline="amx", dry_ru
         # TODO consider what should happen if old proposals have no users
         add_usernames_for_proposal(proposal_id, set(current_usernames['usernames']), user_info, beamline, dry_run=dry_run)
     except KeyError as e:
-        print(f"Problem {e} with getting user info from proposal {proposal_id}. there may be no users associated with the proposal. continuing")
+        logger.exception(f"Problem {e} with getting user info from proposal {proposal_id}. there may be no users associated with the proposal. continuing")
 
 
 def proposalIdFromProposal(propNum):
