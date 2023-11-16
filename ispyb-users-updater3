@@ -1,0 +1,26 @@
+import nsls2api_lib
+import ispyb_lib
+
+all_cycles = nsls2api_lib.get_all_cycles()
+all_proposals = set()
+for cycle in all_cycles:
+    props = nsls2api_lib.get_proposals_from_cycle(cycle["name"])
+    try:
+        props_list = props[0]["proposals"]
+        for proposal in props_list:
+            all_proposals.add(proposal)
+    except KeyError as e:
+        print(f"KeyError - most likely empty proposals list. continuing. cycle: {cycle['name']} error: {e}")
+for proposal in sorted(all_proposals):
+    # get all users in PASS proposal
+    print(f"handling proposal: {proposal}")
+    users = nsls2api_lib.get_users_from_proposal(proposal)
+    if not users.get('users'):
+        print('no users, continuing')
+    else:
+        user_list = users['users']
+        usernames = { user['username'] for user in user_list }
+        print(f"user list for proposal from NSLS2 API: {usernames}")
+    ispyb_lib.reset_users_for_proposal(proposal, dry_run=False)
+    print("")
+
