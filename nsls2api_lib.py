@@ -3,6 +3,8 @@ import time
 
 base_url = "https://api-staging.nsls2.bnl.gov"
 
+ispyb_instruments = ("AMX", "FMX", "NYX")
+
 def get_from_api(url):
     if url:
         response = httpx.get(f"{base_url}/{url}")
@@ -13,6 +15,8 @@ def get_from_api(url):
     else:
         raise ValueError("url cannot be empty")
 
+def get_all_cycles():
+    return get_from_api(f"facility/nsls2/cycles")
 def get_proposals_from_cycle(cycle):
     return get_from_api(f"proposals/{cycle}")
 def get_usernames_from_proposal(proposal_id):
@@ -34,7 +38,7 @@ def get_proposals_for_instrument(cycle="2023-1", instrument="FMX"):
     proposals_on_instrument = []
     proposals = get_proposals_from_cycle(cycle)[0]["proposals"]
     for proposal_num in proposals:
-        proposal = get_all_proposals(proposal_num)
+        proposal = get_proposal_info(proposal_num)
         if instrument in proposal['instruments']:
             proposals_on_instrument.append(proposal_num)
     return proposals_on_instrument

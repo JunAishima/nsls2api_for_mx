@@ -5,11 +5,10 @@ import nsls2api_lib
 import argparse
 import sys
 
-ispyb_beamlines = ("amx", "fmx", "nyx")
 
 def is_ispyb_beamlines_in_list(instrument_list):
     for instrument in instrument_list:
-        if instrument.lower() in ispyb_beamlines:
+        if instrument in nsls2api_lib.ispyb_beamlines:
             return True
     return False
 
