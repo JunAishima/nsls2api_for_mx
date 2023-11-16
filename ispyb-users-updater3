@@ -12,15 +12,16 @@ for cycle in all_cycles:
             all_proposals.add(proposal)
     except KeyError as e:
         print(f"KeyError - most likely empty proposals list. continuing. cycle: {cycle['name']} error: {e}")
-#print(sorted(all_proposals))
+print(f"Starting with a total of {len(all_proposals)} proposals")
 ispyb_proposals = set()
-for proposal in all_proposals:
+for proposal in sorted(all_proposals):
     proposal_info = nsls2api_lib.get_proposal_info(proposal)
     if "error_message" in proposal_info.keys():
-        continue
+        continue  # no useful proposal info - such as a missing one
     if nsls2api_lib.is_ispyb_instrument(proposal_info["instruments"]):
         print(f"adding {proposal_info['proposal_id']}")
         ispyb_proposals.add(proposal_info["proposal_id"])
+print(f"Number of ISPyB proposals is {len(ispyb_proposals)}")
 for proposal in sorted(ispyb_proposals):
     # get all users in PASS proposal
     print(f"handling proposal: {proposal}")
