@@ -1,5 +1,6 @@
 import nsls2api
 import ispyb.factory
+import nsls2api_lib
 
 conn = ispyb.open("/etc/ispyb/ispybConfig.cfg")
 cnx = conn.conn
@@ -97,6 +98,44 @@ def remove_all_usernames_for_proposal(proposal_id, dry_run=True):
                 delete_session_has_person = queryDB(query)
                 print(delete_session_has_person)
 
+
+def create_person(firstName,lastName,login,dry_run=True):
+    query = f"INSERT Person (givenName, familyName, login) VALUES('{first_name}', '{last_name}', '{login}')"
+    if not dry_run:
+        person_id = updateDB(query)
+    else:
+        person_id = -1
+    return person_id
+
+
+def create_people(proposal_id, current_usernames):
+    '''
+    Only way to get information about people in the current API is to
+    get it from the proposal. This should change in the next version
+    of the nslsii API
+    '''
+    person_ids = set()
+    for person_login in usernames_to_add:
+        query = "SELECT personId from Person where login={person_login}"
+        person_id = queryDB(query)
+        first_name = None
+        last_name = None
+        if not person_id:  # the Person doesn't exist in ISPyB yet
+            # extract first and last names from proposal info
+            for user in nsls2api.get_from_api(f"/proposal/{proposal_id}/usernames")['users']
+                if user['username'] == person_id:
+                    first_name = user['first_name']
+                    last_name = user['last_name']
+                break
+            if first_name and last_name:
+                person_id = create_person(first_name, last_name, person_login, dry_run)
+                print(f"added new person {person_login} with id: {person_id}")
+            else:
+                raise RuntimeError(f"Username {person_id} not found, aborting!")
+        person_ids.add(person_id)
+    return person_ids
+
+
 def add_usernames_for_proposal(proposal_id, current_usernames, dry_run=True):
     if type(current_usernames) != set:
         raise ValueError("current usernames must be a set")
@@ -104,17 +143,17 @@ def add_usernames_for_proposal(proposal_id, current_usernames, dry_run=True):
     if dry_run:
         print(f"add_usernames_for_proposal: users to add: {usernames_to_add}")
         return
-    query = "DELETE proposal_has_person where username={username}"
-    for person in usernames_to_add:
-        session_id = get_session_id()  # TODO where do we get this?
-        person_id=get_person_id(person) # personIdFromProposal()
-        params = core.get_session_has_person()
-        params['session_id'] = session_id
-        params['person_id'] = person_id
-        #params['role']  #define? can we identify from nsls2api? perhaps going into the user info?
-        params['remove'] = True
-        response = core.upsert_session_has_person(params)
-        print(f"session add_person: {response}")
+    user_ids = create_people(proposal_id, usernames_to_add)
+    for person_login in usernames_to_add:
+        query = f"INSERT Session_has_Person (sessionId, personId, role) VALUES({}, {person_id}, {})"
+        session_has_person_id = queryOne(query)
+        print(f"session add_person: {session_has_person_id}")
+
+def remove_all_usernames_for_session(session_id):
+    ...
+
+def add_usernames_for_session(session_id, current_usernames, dry_run=True):
+    ...
 
 def set_usernames_for_proposal(proposal_id):
     ...
