@@ -4,6 +4,7 @@ import ispyb.factory
 conn = ispyb.open("/etc/ispyb/ispybConfig.cfg")
 cnx = conn.conn
 cursor = cnx.cursor()
+core = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.CORE, conn)
 
 def queryDB(q):
   cursor.execute(q)
@@ -63,34 +64,42 @@ def get_proposal_numbers(proposal_ids):
     proposal_nums = queryDB(query)
     return get_unique_ids(proposal_nums)
 
-def clear_usernames_for_proposal(proposal_id):
+def clear_usernames_for_proposal(proposal_id, dry_run=True):
+    if dry_run:
+        print(f"Clearing usernames for proposal {proposal_id}")
+        return
     persons_on_proposal = core.retrieve_persons_for_proposal("mx", proposal_id)
     query = "SELECT usernames from BLSession where "
     #probably manual for the following, no stored procedures
     query = "DELETE proposal_has_person where person_id={uid}"
     query = "DELETE session_has_person where person_id={uid}"
 
-def modify_usernames_for_proposal(proposal_id, previous_usernames, current_usernames):
+def modify_usernames_for_proposal(proposal_id, previous_usernames, current_usernames, dry_run=True):
     # previous_usernames and current_usernames must be sets
     if previous_usernames is not set or current_usernames is not set:
         raise ValueError("previous and current usernames must be sets")
     usernames_to_delete = previous_usernames - current_usernames
     usernames_to_add = current_usernames - previous_usernames
+    if dry_run:
+        print(f"users to delete: {usernames_to_delete}")
+        print(f"users to add: {usernames_to_add}")
+        return
     query = "DELETE proposal_has_person where username={username}"
     for person in usernames_to_add:
-        get_session_id()
+        session_id = get_session_id()  # TODO where do we get this?
         person_id=get_person_id(person) # personIdFromProposal()
         params = core.get_session_has_person()
         params['session_id'] = session_id
         params['person_id'] = person_id
         #params['role']  #define? can we identify from nsls2api? perhaps going into the user info?
         params['remove'] = True
-        core.upsert_session_has_person(params)
+        response = core.upsert_session_has_person(params)
+        print(f"session add_person: {response}")
 
 def set_usernames_for_proposal(proposal_id):
     ...
 
-def reset_users_for_proposal(proposal_id):
+def reset_users_for_proposal(proposal_id, dry_run=True):
     ''' given a proposal id, take all of the users off an existing set of visits
         in ispyb and add the current users in '''
     # first, clear all existing usernames for the proposal_id in ISPyB
@@ -101,7 +110,7 @@ def reset_users_for_proposal(proposal_id):
     # finally, set all visits of the proposal to these users
     # alternative, modify the tables as necessary given the previous and current user lists
     # TODO consider what should happen if old proposals have no users
-    modify_user_tables(proposal_id, previous_usernames, current_usernames)
+    modify_usernames_for_proposal(proposal_id, previous_usernames, current_usernames, dry_run=True)
 
 
 def proposalIdFromProposal(propNum):
@@ -121,3 +130,4 @@ def setup_proposal(proposal, users):
     # create newest proposal (highest number)
     # add users to proposal
     # add users to session
+    pass
