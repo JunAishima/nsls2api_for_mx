@@ -1,4 +1,27 @@
 import nsls2api
+import ispyb.factory
+
+conn = ispyb.open("/etc/ispyb/ispybConfig.cfg")
+cnx = conn.conn
+cursor = cnx.cursor()
+
+def queryDB(q):
+  cursor.execute(q)
+  try:
+    return list(cursor.fetchone()) # TODO fetch all instead
+  except TypeError:
+    return 0
+
+def get_ispyb_proposals():
+    # go through all of Session_has_person and get all BLSessions
+    query = "SELECT session_id FROM Session_has_Person"
+    session_ids = queryDB(query)
+    session_id_string = ", ".join(session_ids)
+    print(session_id_string)
+    # get proposals
+    query = "SELECT proposal_id from BLSession where session_id in {session_ids}"
+    proposal_ids = queryDB(query)
+    return proposal_ids
 
 def clear_usernames_for_proposal(proposal_id):
     persons_on_proposal = core.retrieve_persons_for_proposal("mx", proposal_id)
