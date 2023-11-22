@@ -1,2 +1,2 @@
 httpx
-n2snusertools
+ispyb==5.6.1
