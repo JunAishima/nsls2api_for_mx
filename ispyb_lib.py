@@ -117,7 +117,7 @@ def remove_all_usernames_for_proposal(proposal_id, dry_run=True):
 
 
 def create_person(first_name, last_name, login, is_pi, dry_run=True):
-    query = f"INSERT Person (givenName, familyName, login) VALUES('{first_name}', '{last_name}', '{login}')"
+    query = f"INSERT INTO Person (givenName, familyName, login) VALUES('{first_name}', '{last_name}', '{login}')"
     if not dry_run:
         queryDB(query)
         person_id = queryOneFromDB(f"SELECT personId from Person where login='{login}'")
@@ -182,16 +182,16 @@ def add_usernames_for_proposal(proposal_code, current_usernames, users_info, bea
     for person_login in current_usernames:
         for session_id in session_ids:
             person_id = is_person(person_login)
-            query = f"SELECT personId from Session_has_Person where personId={person_id},sessionId={session_id[0]}"
+            query = f"SELECT personId from Session_has_Person WHERE (personId, sessionId) in (({person_id}, {session_id[0]}))"
             if not dry_run:
                 try:
-                    personId = queryOneFromDB(query)
-                    if not personId:
+                    check_person_id = queryOneFromDB(query)
+                    if not check_person_id:
                         raise Exception("No person")
                     return
                 except Exception as e:
                     print(f"Exception while querying Session_has_Person {e}: Most likely because this association has not been made yet. continuing")
-            query=f"INSERT Session_has_Person (sessionId, personId, role, remote) values ({session_id[0]}, {person_id}, 'Co-Investigator', 1)"
+            query=f"INSERT INTO Session_has_Person (sessionId, personId, role, remote) values ({session_id[0]}, {person_id}, 'Co-Investigator', 1)"
             if not dry_run:
                 queryDB(query)
 
@@ -267,14 +267,14 @@ def create_proposal(proposal_id, dry_run):
     user_id_query = f"SELECT personId from Person where login='{prop_info['username']}'"
     user_id = queryOneFromDB(user_id_query)
     try:
-        proposal_id = queryOneFromDB(f"SELECT proposalId from Proposal where proposalNumber='{proposal_id}'")
-        if not proposal_id:
+        test_proposal_id = queryOneFromDB(f"SELECT proposalId from Proposal where proposalNumber='{proposal_id}'")
+        if not test_proposal_id:
             raise Exception("No proposal")
         # already exists, just return it
-        return proposal_id
+        return test_proposal_id
     except Exception as e:
         print(f"Exception while trying to check for existing Proposal: {e}. Typically, no Proposal exists yet")
-    query = f"INSERT Proposal (proposalCode, proposalNumber, proposalType, personId, title) VALUES('mx', {proposal_id}, 'mx', {user_id}, {prop_info['title'].isalpha()})"
+    query = f"INSERT INTO Proposal (proposalCode, proposalNumber, proposalType, personId, title) VALUES('mx', {proposal_id}, 'mx', {user_id}, {prop_info['title'].isalpha()})"
     if not dry_run:
         queryDB(query)
         proposal_id = queryOneFromDB(f"SELECT proposalId from Proposal where proposalNumber='{proposal_id}'")
@@ -293,7 +293,7 @@ def create_session(proposal_id, session_number, beamline_name, dry_run):
         return sid
     except Exception as e:
         print(f"Exception while trying to check for existing session: {e}. typically, no BLSession exists yet")
-    query = f"INSERT BLSession (proposalId, visit_number, beamLineName, startDate, endDate, comments) VALUES({proposal_id}, {session_number}, '{beamline_name}', '{current_datetime}', '{current_datetime}', 'For software testing')"
+    query = f"INSERT INTO BLSession (proposalId, visit_number, beamLineName, startDate, endDate, comments) VALUES({proposal_id}, {session_number}, '{beamline_name}', '{current_datetime}', '{current_datetime}', 'For software testing')"
     if not dry_run:
         queryDB(query)
         sid = queryOneFromDB(f"SELECT sessionId from BLSession where proposalId='{proposal_id}' and visit_number='{session_number}'")
