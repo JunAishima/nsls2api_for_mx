@@ -182,13 +182,9 @@ def add_usernames_for_proposal(proposal_code, current_usernames, users_info, bea
     for person_login in current_usernames:
         for session_id in session_ids:
             person_id = is_person(person_login)
-            params = core.get_session_has_person_params()
-            params['sessionId'] = session_id[0]
-            params['personId'] = person_id
-            params['role'] = 'Co-Investigator'
-            params['remote'] = 1
-            core.upsert_session_has_person(list(params.values()))
-            session_has_person_id = cnx.commit()
+            query=f"INSERT Session_has_Person (sessionId, personId, role, remote) values ({session_id[0]}, {person_id}, 'Co-Investigator', 1)"
+            if not dry_run:
+                queryDB(query)
 
 
 def reset_users_for_proposal(proposal_id, dry_run=False):
@@ -259,28 +255,27 @@ def create_proposal(proposal_id):
     # TODO currently, use first PI. decide how to handle multiple PIs
     # TODO check whether proposal already exists - skip if info is same, after creating users
     prop_info = get_proposal_info_from_nsls2api(proposal_id)
-    params = core.get_proposal_params()
-    params['proposal_code'] = 'mx'
-    params['proposal_number'] = int(proposal_id)
-    params['proposal_type'] = "mx"
     user_id_query = f"SELECT personId from Person where login='{prop_info['username']}'"
     user_id = queryOneFromDB(user_id_query)
-    params['person_id'] = user_id
-    params['title'] = prop_info["title"].isalpha()
-    proposal_id = core.upsert_proposal(list(params.values()))
+    query = f"INSERT Proposal (proposalCode, proposalNumber, proposalType, personId, title) VALUES('mx', {int(proposal_id)}, 'mx', user_id, {prop_info['title'].isalpha()})"
+    if not dry_run:
+        queryDB(query)
+        proposal_id = queryOneFromDB(f"SELECT proposalId from Proposal where proposalNumber='{proposal_id}'")
+    else:
+        proposal_id = -1
+    return person_id
+
+
     cnx.commit()
     return proposal_id
 
 def create_session(proposal_id, session_number, beamline_name):
-    params = core.get_session_for_proposal_code_number_params()
-    params['proposal_code'] = 'mx'
-    params['proposal_number'] = str(proposal_id)
-    params['visit_number'] = session_number
-    params['beamline_name'] = beamline_name
-    params['startdate'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-    params['enddate'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-
-    params['comments'] = 'For software testing'  # TODO get more useful info from nsls2api
     sid = core.upsert_session_for_proposal_code_number(list(params.values()))
-    cnx.commit()
+    current_datetime = datetime.fromtimestamp(time.time()).strftime('%Y-m%-d %H:%M:%S')
+    query = f"INSERT BLSession (proposalCode, proposalNumber, visitNumber, beamlineName, startDate, endDate, comments) VALUES('mx', {proposal_id}, {session_number}, {beamline_name}, {current_datetime}, {current_datetime}, {'For software testing'})"
+    if not dry_run:
+        queryDB(query)
+        sid = queryOneFromDB(f"SELECT sessionId from BLSession where proposalNumber='{proposal_id}' and visitNumber='{session_number}'")
+    else:
+        sid = -1
     return sid
