@@ -285,7 +285,7 @@ def create_proposal(proposal_id, dry_run):
 
 # the proposal_id here is a true proposal ID - currently, this value is actually the proposal number
 def create_session(proposal_id, session_number, beamline_name, dry_run):
-    current_datetime = datetime.fromtimestamp(time.time()).strftime('%Y-m%-d %H:%M:%S')
+    current_datetime = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
     try:
         sid = queryOneFromDB(f"SELECT sessionId from BLSession where proposalId='{proposal_id}' and visit_number='{session_number}'")
         if not sid:
