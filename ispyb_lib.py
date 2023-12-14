@@ -287,10 +287,10 @@ def create_session(proposal_id, session_number, beamline_name, dry_run):
         return sid
     except Exception as e:
         print(f"Exception while trying to check for existing session: {e}. typically, no BLSession exists yet")
-    query = f"INSERT BLSession (proposalCode, proposalNumber, visitNumber, beamlineName, startDate, endDate, comments) VALUES('mx', {proposal_id}, {session_number}, {beamline_name}, {current_datetime}, {current_datetime}, 'For software testing')"
+    query = f"INSERT BLSession (proposalId, visit_number, beamLineName, startDate, endDate, comments) VALUES({proposal_id}, {session_number}, {beamline_name}, '{current_datetime}', '{current_datetime}', 'For software testing')"
     if not dry_run:
         queryDB(query)
-        sid = queryOneFromDB(f"SELECT sessionId from BLSession where proposalNumber='{proposal_id}' and visitNumber='{session_number}'")
+        sid = queryOneFromDB(f"SELECT sessionId from BLSession where proposalId='{proposal_id}' and visitNumber='{session_number}'")
     else:
         sid = -1
     return sid
