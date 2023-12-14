@@ -248,7 +248,7 @@ def get_proposal_info_from_nsls2api(proposal_id):
             user_id = create_person(user["first_name"], user["last_name"], user["username"], user["is_pi"], dry_run=False)
         if user["is_pi"]:
             value["username"] = user["username"]
-    if value("username", None) == None:
+    if value.get("username", None) == None:
         print("This proposal has no PI associated with it!")
     # TODO is pass_type_id for mx/gu/pr? should we use these for proposal_type?
     value["proposal_type"] = "mx"
