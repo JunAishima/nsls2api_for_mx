@@ -257,7 +257,7 @@ def create_proposal(proposal_id, dry_run):
     prop_info = get_proposal_info_from_nsls2api(proposal_id)
     user_id_query = f"SELECT personId from Person where login='{prop_info['username']}'"
     user_id = queryOneFromDB(user_id_query)
-    query = f"INSERT Proposal (proposalCode, proposalNumber, proposalType, personId, title) VALUES('mx', {int(proposal_id)}, 'mx', user_id, {prop_info['title'].isalpha()})"
+    query = f"INSERT Proposal (proposalCode, proposalNumber, proposalType, personId, title) VALUES('mx', {proposal_id}, 'mx', {user_id}, {prop_info['title'].isalpha()})"
     if not dry_run:
         queryDB(query)
         proposal_id = queryOneFromDB(f"SELECT proposalId from Proposal where proposalNumber='{proposal_id}'")
@@ -269,7 +269,7 @@ def create_proposal(proposal_id, dry_run):
 def create_session(proposal_id, session_number, beamline_name, dry_run):
     sid = core.upsert_session_for_proposal_code_number(list(params.values()))
     current_datetime = datetime.fromtimestamp(time.time()).strftime('%Y-m%-d %H:%M:%S')
-    query = f"INSERT BLSession (proposalCode, proposalNumber, visitNumber, beamlineName, startDate, endDate, comments) VALUES('mx', {proposal_id}, {session_number}, {beamline_name}, {current_datetime}, {current_datetime}, {'For software testing'})"
+    query = f"INSERT BLSession (proposalCode, proposalNumber, visitNumber, beamlineName, startDate, endDate, comments) VALUES('mx', {proposal_id}, {session_number}, {beamline_name}, {current_datetime}, {current_datetime}, 'For software testing')"
     if not dry_run:
         queryDB(query)
         sid = queryOneFromDB(f"SELECT sessionId from BLSession where proposalNumber='{proposal_id}' and visitNumber='{session_number}'")
