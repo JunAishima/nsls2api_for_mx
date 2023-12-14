@@ -263,7 +263,7 @@ def create_proposal(proposal_id, dry_run):
         proposal_id = queryOneFromDB(f"SELECT proposalId from Proposal where proposalNumber='{proposal_id}'")
     else:
         proposal_id = -1
-    return person_id
+    return proposal_id
 
 
 def create_session(proposal_id, session_number, beamline_name, dry_run):
