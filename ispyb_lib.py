@@ -186,6 +186,8 @@ def add_usernames_for_proposal(proposal_code, current_usernames, users_info, bea
             if not dry_run:
                 try:
                     personId = queryOneFromDB(query)
+                    if not personId:
+                        raise Exception("No person")
                     return
                 except Exception as e:
                     print(f"Exception while querying Session_has_Person {e}: Most likely because this association has not been made yet. continuing")
@@ -266,6 +268,8 @@ def create_proposal(proposal_id, dry_run):
     user_id = queryOneFromDB(user_id_query)
     try:
         proposal_id = queryOneFromDB(f"SELECT proposalId from Proposal where proposalNumber='{proposal_id}'")
+        if not proposal_id:
+            raise Exception("No proposal")
         # already exists, just return it
         return proposal_id
     except Exception as e:
@@ -284,6 +288,8 @@ def create_session(proposal_id, session_number, beamline_name, dry_run):
     current_datetime = datetime.fromtimestamp(time.time()).strftime('%Y-m%-d %H:%M:%S')
     try:
         sid = queryOneFromDB(f"SELECT sessionId from BLSession where proposalId='{proposal_id}' and visit_number='{session_number}'")
+        if not sid:
+            raise Exception("No session")
         return sid
     except Exception as e:
         print(f"Exception while trying to check for existing session: {e}. typically, no BLSession exists yet")
