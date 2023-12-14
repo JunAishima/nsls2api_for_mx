@@ -178,7 +178,7 @@ def add_usernames_for_proposal(proposal_code, current_usernames, users_info, bea
     proposal_id = create_proposal(proposal_code, dry_run)
     session_ids = get_session_ids_for_proposal(proposal_code)
     if len(session_ids) == 0:
-        session_id = [create_session(proposal_code, 1, beamline, dry_run)]
+        session_id = [create_session(proposal_id, 1, beamline, dry_run)]
     for person_login in current_usernames:
         for session_id in session_ids:
             person_id = is_person(person_login)
@@ -279,10 +279,11 @@ def create_proposal(proposal_id, dry_run):
     return proposal_id
 
 
+# the proposal_id here is a true proposal ID - currently, this value is actually the proposal number
 def create_session(proposal_id, session_number, beamline_name, dry_run):
     current_datetime = datetime.fromtimestamp(time.time()).strftime('%Y-m%-d %H:%M:%S')
     try:
-        sid = queryOneFromDB(f"SELECT sessionId from BLSession where proposalNumber='{proposal_id}' and visitNumber='{session_number}'")
+        sid = queryOneFromDB(f"SELECT sessionId from BLSession where proposalId='{proposal_id}' and visitNumber='{session_number}'")
         return sid
     except Exception as e:
         print(f"Exception while trying to check for existing session: {e}. typically, no BLSession exists yet")
