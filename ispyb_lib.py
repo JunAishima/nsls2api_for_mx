@@ -175,10 +175,10 @@ def add_usernames_for_proposal(proposal_code, current_usernames, users_info, bea
         logger.info('dry run, stopping')
         return
     user_ids = create_people(proposal_code, current_usernames, users_info, dry_run)  # TODO see how to get PI status from nsls2api
-    proposal_id = create_proposal(proposal_code)
+    proposal_id = create_proposal(proposal_code, dry_run)
     session_ids = get_session_ids_for_proposal(proposal_code)
     if len(session_ids) == 0:
-        session_id = [create_session(proposal_code, 1, beamline)]
+        session_id = [create_session(proposal_code, 1, beamline, dry_run)]
     for person_login in current_usernames:
         for session_id in session_ids:
             person_id = is_person(person_login)
@@ -250,7 +250,7 @@ def get_proposal_info_from_nsls2api(proposal_id):
     return value
 
 
-def create_proposal(proposal_id):
+def create_proposal(proposal_id, dry_run):
     # proposal code/type, PI, title
     # TODO currently, use first PI. decide how to handle multiple PIs
     # TODO check whether proposal already exists - skip if info is same, after creating users
@@ -266,10 +266,7 @@ def create_proposal(proposal_id):
     return person_id
 
 
-    cnx.commit()
-    return proposal_id
-
-def create_session(proposal_id, session_number, beamline_name):
+def create_session(proposal_id, session_number, beamline_name, dry_run):
     sid = core.upsert_session_for_proposal_code_number(list(params.values()))
     current_datetime = datetime.fromtimestamp(time.time()).strftime('%Y-m%-d %H:%M:%S')
     query = f"INSERT BLSession (proposalCode, proposalNumber, visitNumber, beamlineName, startDate, endDate, comments) VALUES('mx', {proposal_id}, {session_number}, {beamline_name}, {current_datetime}, {current_datetime}, {'For software testing'})"
