@@ -1,7 +1,7 @@
 import httpx
 import time
 
-base_url = "https://api-staging.nsls2.bnl.gov"
+base_url = "https://api.nsls2.bnl.gov/v1"
 
 ispyb_instruments = ("AMX", "FMX", "NYX")
 
@@ -23,7 +23,7 @@ def get_from_api(url):
 def get_all_cycles():
     return get_from_api(f"facility/nsls2/cycles")
 def get_proposals_from_cycle(cycle):
-    return get_from_api(f"proposals/{cycle}")
+    return get_from_api(f"facility/nsls2/cycle/{cycle}/proposals")
 def get_usernames_from_proposal(proposal_id):
     return set(get_from_api(f"proposal/{proposal_id}/usernames")['usernames'])
 def get_users_from_proposal(proposal_id):

@@ -1,4 +1,3 @@
-import nsls2api
 import ispyb.factory
 import nsls2api_lib
 from datetime import datetime
@@ -207,9 +206,9 @@ def reset_users_for_proposal(proposal_id, dry_run=False):
 
 
 def add_users_for_proposal(proposal_id, session_number=1, beamline="amx", dry_run=False):
-    current_usernames = nsls2api.get_from_api(f"proposal/{proposal_id}/usernames")
+    current_usernames = nsls2api_lib.get_usernames_from_proposal(proposal_id)
     try:
-        user_info = nsls2api.get_from_api(f"proposal/{proposal_id}")['users']
+        user_info = nsls2api_lib.get_users_from_proposal(proposal_id)['users']
         # TODO consider what should happen if old proposals have no users
         add_usernames_for_proposal(proposal_id, set(current_usernames['usernames']), user_info, beamline, dry_run=dry_run)
     except KeyError as e:
@@ -244,7 +243,7 @@ def get_proposal_info_from_nsls2api(proposal_id):
     # get info useful for creating proposal
     # create people in proposal if they haven't already been created
     value = {}
-    info = nsls2api.get_from_api(f"proposal/{proposal_id}")
+    info = nsls2api_lib.get_proposal_info(proposal_id)
     for user in info["users"]:
         if not is_person(user["username"]):
             user_id = create_person(user["first_name"], user["last_name"], user["username"], user["is_pi"], dry_run=False)
