@@ -31,39 +31,39 @@ def main(args=[]):
     cycle = args.cycle
     dry_run = args.dry_run
 
-all_cycles = nsls2api_lib.get_all_cycles()
-all_proposals = set()
-for cycle in all_cycles:
-    props = nsls2api_lib.get_proposals_from_cycle(cycle["name"])
-    try:
-        props_list = props[0]["proposals"]
-        #print(f"{cycle['name']}: {sorted(props_list)}")
-        for proposal in props_list:
-            all_proposals.add(proposal)
-    except KeyError as e:
-        print(f"KeyError - most likely empty proposals list. continuing. cycle: {cycle['name']} error: {e}")
-print(f"Starting with a total of {len(all_proposals)} proposals")
-ispyb_proposals = set()
-for proposal in sorted(all_proposals):
-    proposal_info = nsls2api_lib.get_proposal_info(proposal)
-    if "error_message" in proposal_info.keys():
-        continue  # no useful proposal info - such as a missing one
-    if nsls2api_lib.is_ispyb_instrument(proposal_info["instruments"]):
-        print(f"adding {proposal_info['proposal_id']}")
-        ispyb_proposals.add(proposal_info["proposal_id"])
-print(f"Number of ISPyB proposals is {len(ispyb_proposals)}")
-for proposal in sorted(ispyb_proposals):
-    # get all users in PASS proposal
-    print(f"handling proposal: {proposal}")
-    users = nsls2api_lib.get_users_from_proposal(proposal)
-    if not users.get('users'):
-        print('no users, continuing')
-    else:
-        user_list = users['users']
-        usernames = { user['username'] for user in user_list }
-        print(f"user list for proposal from NSLS2 API: {usernames}")
-    ispyb_lib.reset_users_for_proposal(proposal, dry_run=dry_run)
-    print("")
+    all_cycles = nsls2api_lib.get_all_cycles()
+    all_proposals = set()
+    for cycle in all_cycles:
+        props = nsls2api_lib.get_proposals_from_cycle(cycle["name"])
+        try:
+            props_list = props[0]["proposals"]
+            #print(f"{cycle['name']}: {sorted(props_list)}")
+            for proposal in props_list:
+                all_proposals.add(proposal)
+        except KeyError as e:
+            print(f"KeyError - most likely empty proposals list. continuing. cycle: {cycle['name']} error: {e}")
+    print(f"Starting with a total of {len(all_proposals)} proposals")
+    ispyb_proposals = set()
+    for proposal in sorted(all_proposals):
+        proposal_info = nsls2api_lib.get_proposal_info(proposal)
+        if "error_message" in proposal_info.keys():
+            continue  # no useful proposal info - such as a missing one
+        if nsls2api_lib.is_ispyb_instrument(proposal_info["instruments"]):
+            print(f"adding {proposal_info['proposal_id']}")
+            ispyb_proposals.add(proposal_info["proposal_id"])
+    print(f"Number of ISPyB proposals is {len(ispyb_proposals)}")
+    for proposal in sorted(ispyb_proposals):
+        # get all users in PASS proposal
+        print(f"handling proposal: {proposal}")
+        users = nsls2api_lib.get_users_from_proposal(proposal)
+        if not users.get('users'):
+            print('no users, continuing')
+        else:
+            user_list = users['users']
+            usernames = { user['username'] for user in user_list }
+            print(f"user list for proposal from NSLS2 API: {usernames}")
+        ispyb_lib.reset_users_for_proposal(proposal, dry_run=dry_run)
+        print("")
 
 if __name__ == "__main__":
     main()
