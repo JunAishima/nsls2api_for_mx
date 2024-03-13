@@ -99,7 +99,7 @@ def remove_all_usernames_for_proposal(proposal_id, dry_run=True):
     if dry_run:
         logger.info(f"Dry run: remove usernames from Session_has_Person:",)
         people_name = set()
-        for person in people_in_session:
+        for person in people_in_sessions:
             query = f"SELECT login from Person where personId={person[0]}"
             name = queryOneFromDB(query)
             people_name.add(name)
