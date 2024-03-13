@@ -23,13 +23,13 @@ def get_from_api(url):
 def get_all_cycles():
     return get_from_api(f"facility/nsls2/cycles")
 def get_proposals_from_cycle(cycle):
-    return get_from_api(f"facility/nsls2/cycle/{cycle}/proposals")
+    return get_from_api(f"facility/nsls2/cycle/{cycle}/proposals")['proposals']
 def get_usernames_from_proposal(proposal_id):
     return set(get_from_api(f"proposal/{proposal_id}/usernames")['usernames'])
 def get_users_from_proposal(proposal_id):
     return get_from_api(f"proposal/{proposal_id}/users")
 def get_proposal_info(proposal_id):
-    return get_from_api(f"proposal/{proposal_id}")
+    return get_from_api(f"proposal/{proposal_id}")['proposal']
 
 def get_active_safs_for_proposal(proposal_id):
     safs = get_all_proposals(proposal_id)['safs']

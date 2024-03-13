@@ -37,7 +37,7 @@ def main(args=[]):
         raise RuntimeError("Please define cycle")
 
     cycle_proposals = nsls2api_lib.get_proposals_from_cycle(cycle)
-    for proposal in cycle_proposals[0]["proposals"]:
+    for proposal in cycle_proposals:
         proposal_info = nsls2api_lib.get_proposal_info(proposal)
         if nsls2api_lib.is_ispyb_instrument(proposal_info["instruments"]):
             print(f"Adding/updating users for proposal {proposal}")
