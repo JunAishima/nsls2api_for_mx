@@ -1,6 +1,36 @@
 import nsls2api_lib
 import ispyb_lib
 
+
+def main(args=[]):
+    parser = argparse.ArgumentParser(
+        description="Create or update people, visit, and proposal information in ISPyB. Currently restricted to one visit per proposal, and these visits are assigned to 'amx' due to the lack of visit information in NSLS2API."
+    )
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="count",
+        help="Show more log messages. (Use -vv for even more.)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=False,
+        help="Dry run - do not do actions that change ISPyB.",
+    )
+
+    args = parser.parse_args(args or sys.argv[1:])
+    if args.verbose:
+        if args.verbose == 1:
+            logging.basicConfig(level="INFO")
+        if args.verbose == 2:
+            logging.basicConfig(level="DEBUG")
+        else:
+            logging.basicConfig()  # "WARNING" by default
+
+    cycle = args.cycle
+    dry_run = args.dry_run
+
 all_cycles = nsls2api_lib.get_all_cycles()
 all_proposals = set()
 for cycle in all_cycles:
@@ -32,6 +62,8 @@ for proposal in sorted(ispyb_proposals):
         user_list = users['users']
         usernames = { user['username'] for user in user_list }
         print(f"user list for proposal from NSLS2 API: {usernames}")
-    ispyb_lib.reset_users_for_proposal(proposal, dry_run=False)
+    ispyb_lib.reset_users_for_proposal(proposal, dry_run=dry_run)
     print("")
 
+if __name__ == "__main__":
+    main()
