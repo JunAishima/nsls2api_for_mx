@@ -195,7 +195,7 @@ def add_usernames_for_proposal(proposal_code, current_usernames, users_info, bea
                 queryDB(query)
 
 
-def reset_users_for_proposal(proposal_id, dry_run=False):
+def reset_users_for_proposal(proposal_id, dry_run=True):
     ''' given a proposal id, take all of the users off an existing set of visits
         in ispyb and add the current users in '''
     # first, clear all existing usernames for the proposal_id in ISPyB
@@ -205,7 +205,7 @@ def reset_users_for_proposal(proposal_id, dry_run=False):
     add_users_for_proposal(proposal_id, dry_run)
 
 
-def add_users_for_proposal(proposal_id, session_number=1, beamline="amx", dry_run=False):
+def add_users_for_proposal(proposal_id, session_number=1, beamline="amx", dry_run=True):
     current_usernames = nsls2api_lib.get_usernames_from_proposal(proposal_id)
     try:
         user_info = nsls2api_lib.get_users_from_proposal(proposal_id)['users']
@@ -258,7 +258,7 @@ def get_proposal_info_from_nsls2api(proposal_id):
     return value
 
 
-def create_proposal(proposal_id, dry_run):
+def create_proposal(proposal_id, dry_run=True):
     # proposal code/type, PI, title
     # TODO currently, use first PI. decide how to handle multiple PIs
     # TODO check whether proposal already exists - skip if info is same, after creating users
@@ -283,7 +283,7 @@ def create_proposal(proposal_id, dry_run):
 
 
 # the proposal_id here is a true proposal ID - currently, this value is actually the proposal number
-def create_session(proposal_id, session_number, beamline_name, dry_run):
+def create_session(proposal_id, session_number, beamline_name, dry_run=True):
     current_datetime = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
     try:
         sid = queryOneFromDB(f"SELECT sessionId from BLSession where proposalId='{proposal_id}' and visit_number='{session_number}'")
