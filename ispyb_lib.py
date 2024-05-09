@@ -215,13 +215,13 @@ def add_users_for_proposal(proposal_id, session_number=1, beamline="amx", dry_ru
         logger.exception(f"Problem {e} with getting user info from proposal {proposal_id}. there may be no users associated with the proposal. continuing")
 
 
-def proposalIdFromProposal(propNum):
+def proposal_id_from_proposal(propNum):
   q = ("select proposalId from Proposal where proposalNumber = " + str(propNum))
   return (queryOneFromDB(q))
 
 
-def maxVisitNumfromProposal(propNum):
-  propID = proposalIdFromProposal(propNum)
+def max_visit_num_from_proposal(propNum):
+  propID = proposal_id_from_proposal(propNum)
   q = ("select max(visit_number) from BLSession where proposalId = " + str(propID))
   return (queryOneFromDB(q))
 
