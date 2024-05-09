@@ -13,7 +13,8 @@ def main(args=[]):
     parser.add_argument(
             "--cycle",
             type=str,
-            help="Cycle to create/update people, visits, and proposals for"
+            default=nsls2api_lib.get_current_cycle(),
+            help=f"Cycle to create/update people, visits, and proposals for. Default is current cycle ({nsls2api_lib.get_current_cycle()})"
     )
     parser.add_argument(
         "--verbose",
@@ -39,9 +40,6 @@ def main(args=[]):
 
     cycle = args.cycle
     dry_run = args.dry_run
-
-    if not cycle:
-        raise RuntimeError("Please define cycle")
 
     cycle_proposals = nsls2api_lib.get_proposals_from_cycle(cycle)
     for proposal in cycle_proposals:
