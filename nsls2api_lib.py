@@ -47,3 +47,6 @@ def get_proposals_for_instrument(cycle="2023-1", instrument="FMX"):
         if instrument in proposal['instruments']:
             proposals_on_instrument.append(proposal_num)
     return proposals_on_instrument
+
+def get_current_cycle():
+    return get_from_api(f"facility/nsls2/cycles/current")["cycle"]
