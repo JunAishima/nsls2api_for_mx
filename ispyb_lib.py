@@ -1,4 +1,3 @@
-import nsls2api
 import ispyb.factory
 import nsls2api_lib
 from datetime import datetime
@@ -96,11 +95,11 @@ def remove_all_usernames_for_proposal(proposal_id, dry_run=True):
         people_in_session = queryDB(query)
         for person in people_in_session:
             # TODO something to show the username of this person?
-            people_in_sessions.add(person[0])
+            people_in_sessions.add(person)
     if dry_run:
         logger.info(f"Dry run: remove usernames from Session_has_Person:",)
         people_name = set()
-        for person in people_in_session:
+        for person in people_in_sessions:
             query = f"SELECT login from Person where personId={person[0]}"
             name = queryOneFromDB(query)
             people_name.add(name)
@@ -109,7 +108,7 @@ def remove_all_usernames_for_proposal(proposal_id, dry_run=True):
     if not dry_run:
         for session_id in session_ids:
             for person in people_in_sessions:
-                query = f"DELETE FROM Session_has_Person where sessionId={session_id[0]} AND personId={person}"
+                query = f"DELETE FROM Session_has_Person where sessionId={session_id[0]} AND personId={person[0]}"
                 try:
                     delete_session_has_person = queryDB(query)
                 except mysql.connector.errors.ProgrammingError as e:
@@ -196,7 +195,7 @@ def add_usernames_for_proposal(proposal_code, current_usernames, users_info, bea
                 queryDB(query)
 
 
-def reset_users_for_proposal(proposal_id, dry_run=False):
+def reset_users_for_proposal(proposal_id, dry_run=True):
     ''' given a proposal id, take all of the users off an existing set of visits
         in ispyb and add the current users in '''
     # first, clear all existing usernames for the proposal_id in ISPyB
@@ -206,23 +205,23 @@ def reset_users_for_proposal(proposal_id, dry_run=False):
     add_users_for_proposal(proposal_id, dry_run)
 
 
-def add_users_for_proposal(proposal_id, session_number=1, beamline="amx", dry_run=False):
-    current_usernames = nsls2api.get_from_api(f"proposal/{proposal_id}/usernames")
+def add_users_for_proposal(proposal_id, session_number=1, beamline="amx", dry_run=True):
+    current_usernames = nsls2api_lib.get_usernames_from_proposal(proposal_id)
     try:
-        user_info = nsls2api.get_from_api(f"proposal/{proposal_id}")['users']
+        user_info = nsls2api_lib.get_users_from_proposal(proposal_id)['users']
         # TODO consider what should happen if old proposals have no users
-        add_usernames_for_proposal(proposal_id, set(current_usernames['usernames']), user_info, beamline, dry_run=dry_run)
+        add_usernames_for_proposal(proposal_id, set(current_usernames), user_info, beamline, dry_run=dry_run)
     except KeyError as e:
         logger.exception(f"Problem {e} with getting user info from proposal {proposal_id}. there may be no users associated with the proposal. continuing")
 
 
-def proposalIdFromProposal(propNum):
+def proposal_id_from_proposal(propNum):
   q = ("select proposalId from Proposal where proposalNumber = " + str(propNum))
   return (queryOneFromDB(q))
 
 
-def maxVisitNumfromProposal(propNum):
-  propID = proposalIdFromProposal(propNum)
+def max_visit_num_from_proposal(propNum):
+  propID = proposal_id_from_proposal(propNum)
   q = ("select max(visit_number) from BLSession where proposalId = " + str(propID))
   return (queryOneFromDB(q))
 
@@ -244,7 +243,7 @@ def get_proposal_info_from_nsls2api(proposal_id):
     # get info useful for creating proposal
     # create people in proposal if they haven't already been created
     value = {}
-    info = nsls2api.get_from_api(f"proposal/{proposal_id}")
+    info = nsls2api_lib.get_proposal_info(proposal_id)
     for user in info["users"]:
         if not is_person(user["username"]):
             user_id = create_person(user["first_name"], user["last_name"], user["username"], user["is_pi"], dry_run=False)
@@ -259,7 +258,7 @@ def get_proposal_info_from_nsls2api(proposal_id):
     return value
 
 
-def create_proposal(proposal_id, dry_run):
+def create_proposal(proposal_id, dry_run=True):
     # proposal code/type, PI, title
     # TODO currently, use first PI. decide how to handle multiple PIs
     # TODO check whether proposal already exists - skip if info is same, after creating users
@@ -284,7 +283,7 @@ def create_proposal(proposal_id, dry_run):
 
 
 # the proposal_id here is a true proposal ID - currently, this value is actually the proposal number
-def create_session(proposal_id, session_number, beamline_name, dry_run):
+def create_session(proposal_id, session_number, beamline_name, dry_run=True):
     current_datetime = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
     try:
         sid = queryOneFromDB(f"SELECT sessionId from BLSession where proposalId='{proposal_id}' and visit_number='{session_number}'")

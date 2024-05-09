@@ -13,13 +13,20 @@ def main(args=[]):
     parser.add_argument(
             "--cycle",
             type=str,
-            help="Cycle to create/update people, visits, and proposals for"
+            default=nsls2api_lib.get_current_cycle(),
+            help=f"Cycle to create/update people, visits, and proposals for. Default is current cycle ({nsls2api_lib.get_current_cycle()})"
     )
     parser.add_argument(
         "--verbose",
         "-v",
         action="count",
         help="Show more log messages. (Use -vv for even more.)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=False,
+        help="Dry run - do not do actions that change ISPyB.",
     )
 
     args = parser.parse_args(args or sys.argv[1:])
@@ -32,16 +39,14 @@ def main(args=[]):
             logging.basicConfig()  # "WARNING" by default
 
     cycle = args.cycle
-
-    if not cycle:
-        raise RuntimeError("Please define cycle")
+    dry_run = args.dry_run
 
     cycle_proposals = nsls2api_lib.get_proposals_from_cycle(cycle)
-    for proposal in cycle_proposals[0]["proposals"]:
+    for proposal in cycle_proposals:
         proposal_info = nsls2api_lib.get_proposal_info(proposal)
         if nsls2api_lib.is_ispyb_instrument(proposal_info["instruments"]):
             print(f"Adding/updating users for proposal {proposal}")
-            ispyb_lib.reset_users_for_proposal(proposal, dry_run=False)
+            ispyb_lib.reset_users_for_proposal(proposal, dry_run=dry_run)
 
 if __name__ == "__main__":
     main()

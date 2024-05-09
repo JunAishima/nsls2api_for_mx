@@ -1,7 +1,7 @@
 import httpx
 import time
 
-base_url = "https://api-staging.nsls2.bnl.gov"
+base_url = "https://api.nsls2.bnl.gov/v1"
 
 ispyb_instruments = ("AMX", "FMX", "NYX")
 
@@ -23,27 +23,30 @@ def get_from_api(url):
 def get_all_cycles():
     return get_from_api(f"facility/nsls2/cycles")
 def get_proposals_from_cycle(cycle):
-    return get_from_api(f"proposals/{cycle}")
+    return get_from_api(f"facility/nsls2/cycle/{cycle}/proposals")['proposals']
 def get_usernames_from_proposal(proposal_id):
     return set(get_from_api(f"proposal/{proposal_id}/usernames")['usernames'])
 def get_users_from_proposal(proposal_id):
     return get_from_api(f"proposal/{proposal_id}/users")
 def get_proposal_info(proposal_id):
-    return get_from_api(f"proposal/{proposal_id}")
+    return get_from_api(f"proposal/{proposal_id}")['proposal']
 
-def get_active_safs_for_proposal(proposal_id):
+def get_active_safs_for_proposal(proposal_id):  # currently unused
     safs = get_all_proposals(proposal_id)['safs']
 
-def get_all_active_safs_in_current_cycle(cycle="2023-1"):
+def get_all_active_safs_in_current_cycle(cycle="2023-1"):  # currently unused
     proposals = get_proposals_from_cycle(cycle)
     for proposal in proposals:
         safs = get_all_proposals(proposal.id)['safs']
 
 def get_proposals_for_instrument(cycle="2023-1", instrument="FMX"):
     proposals_on_instrument = []
-    proposals = get_proposals_from_cycle(cycle)[0]["proposals"]
+    proposals = get_proposals_from_cycle(cycle)
     for proposal_num in proposals:
         proposal = get_proposal_info(proposal_num)
         if instrument in proposal['instruments']:
             proposals_on_instrument.append(proposal_num)
     return proposals_on_instrument
+
+def get_current_cycle():
+    return get_from_api(f"facility/nsls2/cycles/current")["cycle"]
