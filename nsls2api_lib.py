@@ -41,7 +41,7 @@ def get_all_active_safs_in_current_cycle(cycle="2023-1"):  # currently unused
 
 def get_proposals_for_instrument(cycle="2023-1", instrument="FMX"):
     proposals_on_instrument = []
-    proposals = get_proposals_from_cycle(cycle)[0]["proposals"]
+    proposals = get_proposals_from_cycle(cycle)
     for proposal_num in proposals:
         proposal = get_proposal_info(proposal_num)
         if instrument in proposal['instruments']:
