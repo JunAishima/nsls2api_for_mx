@@ -1,15 +1,16 @@
 import httpx
 import time
 
-base_url = "https://api-staging.nsls2.bnl.gov"
+base_url = "https://api.nsls2.bnl.gov/v1"
 
 def get_from_api(url):
     if url:
-        response = httpx.get(f"{base_url}/{url}")
+        whole_url = f"{base_url}/{url}"
+        response = httpx.get(whole_url)
         time.sleep(0.5)
         if response.status_code == httpx.codes.OK:
             return response.json()
-        raise RuntimeError(f"failed to get value from {url}. response code: {response.status_code}")
+        raise RuntimeError(f"failed to get value from {whole_url}. response code: {response.status_code}")
     else:
         raise ValueError("url cannot be empty")
 proposals_api = get_from_api("proposals/2022-3")
