@@ -24,6 +24,23 @@ def get_all_cycles():
     return get_from_api(f"facility/nsls2/cycles")
 def get_proposals_from_cycle(cycle):
     return get_from_api(f"facility/nsls2/cycle/{cycle}/proposals")['proposals']
+
+# return true if any of check_instruments are in proposal_instruments
+def check_instruments_in_proposal(proposal_instruments, check_instruments):
+    for instrument in check_instruments:
+        if instrument.upper() in proposal_instruments:
+            return True
+    return False
+
+def get_proposals_for_cycle_instruments(cycle, instruments):
+    proposals_to_return = []
+    proposals_cycle = get_proposals_from_cycle(cycle)
+    for proposal in proposals_cycle:
+        proposal_info = get_proposal_info(proposal)
+        if check_instruments_in_proposal(proposal_info['instruments'], instruments):
+            proposals_to_return.append(proposal)
+    return proposals_to_return
+
 def get_usernames_from_proposal(proposal_id):
     return set(get_from_api(f"proposal/{proposal_id}/usernames")['usernames'])
 def get_users_from_proposal(proposal_id):
