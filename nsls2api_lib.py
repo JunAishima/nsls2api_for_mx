@@ -33,15 +33,6 @@ def check_instruments_in_proposal(proposal_instruments, check_instruments):
     return False
 
 def get_proposals_for_cycle_instruments(cycle, instruments):
-    proposals_to_return = set()
-    proposals_cycle = get_proposals_from_cycle(cycle)
-    for proposal in proposals_cycle:
-        proposal_info = get_proposal_info(proposal)
-        if check_instruments_in_proposal(proposal_info['instruments'], instruments):
-            proposals_to_return.add(proposal)
-    return sorted(proposals_to_return)
-
-def get_proposals_for_cycle_instruments_2(cycle, instruments):
     instruments_string = ""
     for index, instrument in enumerate(instruments):
         if index > 0:
