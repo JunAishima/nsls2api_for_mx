@@ -33,13 +33,34 @@ def check_instruments_in_proposal(proposal_instruments, check_instruments):
     return False
 
 def get_proposals_for_cycle_instruments(cycle, instruments):
-    proposals_to_return = []
+    proposals_to_return = set()
     proposals_cycle = get_proposals_from_cycle(cycle)
     for proposal in proposals_cycle:
         proposal_info = get_proposal_info(proposal)
         if check_instruments_in_proposal(proposal_info['instruments'], instruments):
-            proposals_to_return.append(proposal)
-    return proposals_to_return
+            proposals_to_return.add(proposal)
+    return sorted(proposals_to_return)
+
+def get_proposals_for_cycle_instruments_2(cycle, instruments):
+    instruments_string = ""
+    for index, instrument in enumerate(instruments):
+        if index > 0:
+            instruments_string += "&"
+        instruments_string += f"beamline={instrument}"
+    cycle_string = f"cycle={cycle}"
+    proposal_query = f"proposals/?{instruments_string}&{cycle_string}&facility=nsls2"
+    proposals_to_return = set()
+    items_per_page = 50
+    page = 1
+    while 1:
+        proposals = get_from_api(f"proposals/?{instruments_string}&{cycle_string}&facility=nsls2&page_size={items_per_page}&page={page}")
+        for proposal in proposals['proposals']:
+            proposals_to_return.add(proposal['proposal_id'])
+        if proposals['count'] == items_per_page:
+            page += 1
+        else:
+            break
+    return sorted(proposals_to_return)
 
 def get_usernames_from_proposal(proposal_id):
     return set(get_from_api(f"proposal/{proposal_id}/usernames")['usernames'])
