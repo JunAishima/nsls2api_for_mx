@@ -109,8 +109,11 @@ def remove_all_usernames_for_proposal(proposal_id, dry_run=True):
             # TODO something to show the username of this person?
             people_in_sessions.add(person)
     if dry_run:
+        if not len(people_in_sessions):
+            logger.info(f"No usernames in sessions for proposal {proposal_id}")
+            return
         logger.info(
-            f"Dry run: remove usernames from Session_has_Person:",
+            f"Dry run: remove usernames in Session_has_Person for proposal {proposal_id}",
         )
         people_name = set()
         for person in people_in_sessions:
