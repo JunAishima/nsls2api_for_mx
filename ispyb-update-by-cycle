@@ -41,12 +41,13 @@ def main(args=[]):
     cycle = args.cycle
     dry_run = args.dry_run
 
-    cycle_proposals = nsls2api_lib.get_proposals_from_cycle(cycle)
+    cycle_proposals = nsls2api_lib.get_proposal_ids_for_cycle_instruments(
+        cycle, nsls2api_lib.ispyb_instruments
+    )
     for proposal in cycle_proposals:
-        proposal_info = nsls2api_lib.get_proposal_info(proposal)
-        if nsls2api_lib.is_ispyb_instrument(proposal_info["instruments"]):
-            print(f"Adding/updating users for proposal {proposal}")
-            ispyb_lib.reset_users_for_proposal(proposal, dry_run=dry_run)
+        print(f"Adding/updating users for proposal {proposal}")
+        ispyb_lib.reset_users_for_proposal(proposal, dry_run=dry_run)
+
 
 if __name__ == "__main__":
     main()
