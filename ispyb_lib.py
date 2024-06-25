@@ -225,12 +225,13 @@ def add_usernames_for_proposal(
                         raise Exception("No person")
                     return
                 except Exception as e:
-                    print(
+                    logger.debug(
                         f"Exception while querying Session_has_Person {e}: Most likely because this association has not been made yet. continuing"
-                    )
+                    )  # This is expected if the person is newly added, so just create the association next
             query = f"INSERT INTO Session_has_Person (sessionId, personId, role, remote) values ({session_id[0]}, {person_id}, 'Co-Investigator', 1)"
             if not dry_run:
-                queryDB(query)
+                output = queryDB(query)
+                logger.debug(f"query: {query} output: {output}")
 
 
 def reset_users_for_proposal(proposal_id, dry_run=True):
