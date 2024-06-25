@@ -4,7 +4,7 @@ import ispyb_lib
 import nsls2api_lib
 import argparse
 import sys
-
+import logging
 
 def main(args=[]):
     parser = argparse.ArgumentParser(
