@@ -32,7 +32,8 @@ def check_instruments_in_proposal(proposal_instruments, check_instruments):
             return True
     return False
 
-def get_proposals_for_cycle_instruments(cycle, instruments):
+
+def get_proposal_ids_for_cycle_instruments(cycle, instruments):
     instruments_string = ""
     for index, instrument in enumerate(instruments):
         if index > 0:
@@ -40,18 +41,21 @@ def get_proposals_for_cycle_instruments(cycle, instruments):
         instruments_string += f"beamline={instrument}"
     cycle_string = f"cycle={cycle}"
     proposal_query = f"proposals/?{instruments_string}&{cycle_string}&facility=nsls2"
-    proposals_to_return = set()
+    proposal_ids_to_return = set()
     items_per_page = 50
     page = 1
     while 1:
-        proposals = get_from_api(f"proposals/?{instruments_string}&{cycle_string}&facility=nsls2&page_size={items_per_page}&page={page}")
-        for proposal in proposals['proposals']:
-            proposals_to_return.add(proposal['proposal_id'])
-        if proposals['count'] == items_per_page:
+        proposals = get_from_api(
+            f"proposals/?{instruments_string}&{cycle_string}&facility=nsls2&page_size={items_per_page}&page={page}"
+        )
+        for proposal in proposals["proposals"]:
+            proposal_ids_to_return.add(proposal["proposal_id"])
+        if proposals["count"] == items_per_page:
             page += 1
         else:
             break
-    return sorted(proposals_to_return)
+    return sorted(proposal_ids_to_return)
+
 
 def get_usernames_from_proposal(proposal_id):
     return set(get_from_api(f"proposal/{proposal_id}/usernames")['usernames'])
