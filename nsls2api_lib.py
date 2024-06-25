@@ -1,5 +1,8 @@
 import httpx
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 base_url = "https://api.nsls2.bnl.gov/v1"
 
@@ -41,28 +44,36 @@ def check_instruments_in_proposal(proposal_instruments, check_instruments):
     return False
 
 
-def get_proposal_ids_for_cycle_instruments(cycle, instruments):
-    instruments_string = ""
-    for index, instrument in enumerate(instruments):
-        if index > 0:
-            instruments_string += "&"
-        instruments_string += f"beamline={instrument}"
-    cycle_string = f"cycle={cycle}"
-    proposal_query = f"proposals/?{instruments_string}&{cycle_string}&facility=nsls2"
+def get_proposal_ids_from_proposals_endpoint(proposal_query, items_per_page=50):
     proposal_ids_to_return = set()
-    items_per_page = 50
     page = 1
+    logger.debug(f"Proposal query: {proposal_query}")
     while 1:
         proposals = get_from_api(
-            f"proposals/?{instruments_string}&{cycle_string}&facility=nsls2&page_size={items_per_page}&page={page}"
+            f"{proposal_query}&page_size={items_per_page}&page={page}"
+        )
+        logger.debug(
+            f"Page: {page} Number of unique proposals: {len(proposal_ids_to_return)}"
         )
         for proposal in proposals["proposals"]:
             proposal_ids_to_return.add(proposal["proposal_id"])
-        if proposals["count"] == items_per_page:
-            page += 1
-        else:
+        if proposals["count"] != items_per_page:
             break
+        page += 1
     return sorted(proposal_ids_to_return)
+
+
+def get_proposal_ids_for_cycle_instruments(cycle, instruments):
+    instruments_string = "beamline=" + "&beamline=".join(instruments)
+    proposal_query = f"proposals/?{instruments_string}&cycle={cycle}&facility=nsls2"
+    return get_proposal_ids_from_proposals_endpoint(proposal_query)
+
+
+def get_all_proposal_ids_for_instruments(instruments):
+    instruments_string = "beamline=" + "&beamline=".join(instruments)
+    cycles_string = "cycle=" + "&cycle=".join(get_all_cycles()["cycles"])
+    proposal_query = f"proposals/?{instruments_string}&{cycles_string}&facility=nsls2"
+    return get_proposal_ids_from_proposals_endpoint(proposal_query)
 
 
 def get_usernames_from_proposal(proposal_id):
