@@ -15,10 +15,7 @@ core = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.CORE, conn)
 
 def queryDB(q):
     cursor.execute(q)
-    try:
-        return list(cursor.fetchall())
-    except TypeError:
-        return 0
+    return list(cursor.fetchall())
 
 
 def queryOneFromDB(q):
