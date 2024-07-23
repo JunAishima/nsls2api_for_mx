@@ -84,6 +84,10 @@ def get_users_from_proposal(proposal_id):
     return get_from_api(f"proposal/{proposal_id}/users")
 
 
+def get_directories_from_proposal(proposal_id):
+    return get_from_api(f"proposal/{proposal_id}/directories")
+
+
 def get_proposal_info(proposal_id):
     return get_from_api(f"proposal/{proposal_id}")["proposal"]
 
@@ -106,6 +110,21 @@ def get_proposals_for_instrument(cycle="2023-1", instrument="FMX"):
         if instrument in proposal["instruments"]:
             proposals_on_instrument.append(proposal_num)
     return proposals_on_instrument
+
+
+def get_data_sessions_for_user(username):
+    sessions = get_from_api(f"data-session/{username}")
+    return sessions
+
+
+def get_cycles_from_facility(facilityname):
+    cycles = get_from_api(f"facility/{facilityname}/cycles")
+    return cycles
+
+
+def get_beamline(beamline):
+    beamline = get_from_api(f"beamline/{beamline}")
+    return beamline
 
 
 def get_current_cycle():
