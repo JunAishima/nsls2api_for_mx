@@ -353,7 +353,7 @@ def create_session(proposal_id, session_number, beamline_name, dry_run=True):
         print(
             f"Exception while trying to check for existing session: {e}. typically, no BLSession exists yet"
         )
-    query = f"INSERT INTO BLSession (proposalId, visit_number, beamLineName, startDate, endDate, comments) VALUES({proposal_id}, {session_number}, '{beamline_name}', '{current_datetime}', '{current_datetime}', 'For software testing')"
+    query = f"INSERT INTO BLSession (proposalId, visit_number, beamLineName, startDate, endDate, comments) VALUES({proposal_id}, {session_number}, '{beamline_name.upper()}', '{current_datetime}', '{current_datetime}', 'For software testing')"
     if not dry_run:
         queryDB(query)
         sid = queryOneFromDB(
