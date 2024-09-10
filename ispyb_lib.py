@@ -166,7 +166,7 @@ def create_people(proposal_id, current_usernames, users_info, dry_run=True):
         is_pi = False
         if not person_id:  # the Person doesn't exist in ISPyB yet
             # extract first and last names from proposal info
-            for user_info in users_info:
+            for user_info in users_info["users"]:
                 if username == user_info["username"]:
                     first_name = user_info["first_name"]
                     last_name = user_info["last_name"]
