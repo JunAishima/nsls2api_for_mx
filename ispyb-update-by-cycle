@@ -47,13 +47,6 @@ def main(args=[]):
     for proposal in cycle_proposals:
         print(f"Adding/updating users for proposal {proposal}")
         proposal_info = nsls2api_lib.get_proposal_info(proposal)
-        ispyb_lib.add_usernames_for_proposal(
-            proposal,
-            nsls2api_lib.get_usernames_from_proposal(proposal),
-            nsls2api_lib.get_users_from_proposal(proposal),
-            proposal_info["instruments"][0],
-            dry_run=dry_run,
-        )
         ispyb_lib.reset_users_for_proposal(proposal, dry_run=dry_run)
 
 
