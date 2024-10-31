@@ -37,9 +37,9 @@ def main(args=[]):
         nsls2api_lib.ispyb_instruments
     )
     print(f"Number of ISPyB proposals is {len(ispyb_proposals)}")
-    for proposal in ispyb_proposals:
+    for index, proposal in enumerate(ispyb_proposals, 1):
         # get all users in PASS proposal
-        print(f"handling proposal: {proposal}")
+        print(f"{index}: handling proposal: {proposal}")
         proposal_info = nsls2api_lib.get_proposal_info(proposal)
         ispyb_lib.reset_users_for_proposal(proposal, dry_run=dry_run)
         print("")
