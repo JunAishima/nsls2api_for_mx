@@ -44,16 +44,10 @@ def main(args=[]):
     cycle_proposals = nsls2api_lib.get_proposal_ids_for_cycle_instruments(
         cycle, nsls2api_lib.ispyb_instruments
     )
-    for proposal in cycle_proposals:
-        print(f"Adding/updating users for proposal {proposal}")
+    print(f"Number of ISPyB proposals to update is {len(cycle_proposals)}")
+    for index, proposal in enumerate(cycle_proposals, 1):
+        print(f"{index}: Adding/updating users for proposal {proposal}")
         proposal_info = nsls2api_lib.get_proposal_info(proposal)
-        ispyb_lib.add_usernames_for_proposal(
-            proposal,
-            nsls2api_lib.get_usernames_from_proposal(proposal),
-            nsls2api_lib.get_users_from_proposal(proposal),
-            proposal_info["instruments"][0],
-            dry_run=dry_run,
-        )
         ispyb_lib.reset_users_for_proposal(proposal, dry_run=dry_run)
 
 

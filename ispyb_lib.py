@@ -210,7 +210,11 @@ def add_usernames_for_proposal(
     user_ids = create_people(
         proposal_code, current_usernames, users_info, dry_run
     )  # TODO see how to get PI status from nsls2api
-    proposal_id = create_proposal(proposal_code, dry_run)
+    try:
+        proposal_id = create_proposal(proposal_code, dry_run)
+    except ValueError as e:
+        logger.error(e)
+        return
     session_ids = get_session_ids_for_proposal(proposal_code)
     if len(session_ids) == 0:
         session_id = [create_session(proposal_id, 1, beamline, dry_run)]
@@ -300,8 +304,8 @@ def get_proposal_info_from_nsls2api(proposal_id):
             )
         if user["is_pi"]:
             value["username"] = user["username"]
-    if value.get("username", None) == None:
-        print("This proposal has no PI associated with it!")
+    if value.get("username", None) is None:
+        raise ValueError(f"This proposal {proposal_id} has no PI associated with it!")
     # TODO is pass_type_id for mx/gu/pr? should we use these for proposal_type?
     value["proposal_type"] = "mx"
     value["title"] = info["title"]
@@ -313,9 +317,16 @@ def create_proposal(proposal_id, dry_run=True):
     # proposal code/type, PI, title
     # TODO currently, use first PI. decide how to handle multiple PIs
     # TODO check whether proposal already exists - skip if info is same, after creating users
-    prop_info = get_proposal_info_from_nsls2api(proposal_id)
-    user_id_query = f"SELECT personId from Person where login='{prop_info['username']}'"
-    user_id = queryOneFromDB(user_id_query)
+    try:
+        prop_info = get_proposal_info_from_nsls2api(proposal_id)
+        user_id_query = f"SELECT personId from Person where login='{prop_info['username']}'"
+        user_id = queryOneFromDB(user_id_query)
+    except Exception as e:
+        e.add_note(
+            f"Exception while selecting person for Proposal: {e}. Typically, no users associated with proposal"
+        )
+        raise
+
     try:
         test_proposal_id = queryOneFromDB(
             f"SELECT proposalId from Proposal where proposalNumber='{proposal_id}'"
