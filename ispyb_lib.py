@@ -251,7 +251,7 @@ def reset_users_for_proposal(proposal_id, dry_run=True):
 def add_users_for_proposal(proposal_id, session_number=1, beamline="amx", dry_run=True):
     current_usernames = nsls2api_lib.get_usernames_from_proposal(proposal_id)
     try:
-        user_info = nsls2api_lib.get_users_from_proposal(proposal_id)["users"]
+        user_info = nsls2api_lib.get_users_from_proposal(proposal_id)
         # TODO consider what should happen if old proposals have no users
         add_usernames_for_proposal(
             proposal_id, set(current_usernames), user_info, beamline, dry_run=dry_run
