@@ -322,9 +322,13 @@ def create_proposal(proposal_id, dry_run=True):
         user_id_query = f"SELECT personId from Person where login='{prop_info['username']}'"
         user_id = queryOneFromDB(user_id_query)
     except Exception as e:
-        e.add_note(
-            f"Exception while selecting person for Proposal: {e}. Typically, no users associated with proposal"
-        )
+        message = f"Exception while selecting person for Proposal: {e}. Typically, no users associated with proposal"
+        if hasattr(e, 'add_note'):
+            e.add_note(
+                message
+            )
+        else:
+            print(message)
         raise
 
     try:
